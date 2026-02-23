@@ -24,6 +24,7 @@ import { AudioCrossfader } from './audio/AudioCrossfader';
 import { DistantScenery } from './treadmill/DistantScenery';
 import { BirdFlock } from './environment/BirdFlock';
 import { WaterSurface } from './environment/WaterSurface';
+import { DesktopCameraController } from './interaction/DesktopCameraController';
 import { CABIN_FLOOR_Y, CABIN_WIDTH, CABIN_DEPTH } from './utils/constants';
 
 export class App {
@@ -96,6 +97,10 @@ export class App {
     const trainMotion = new TrainMotion(this.engine.cameraRig);
     this.loop.addSystem(trainMotion);
 
+    // --- Desktop Camera Controller (non-VR mouse+keyboard) ---
+    const desktopCam = new DesktopCameraController(camera, renderer);
+    this.loop.addSystem(desktopCam);
+
     // --- Interactable objects (positioned for new 3×3×6m cabin) ---
     const floorTop = CABIN_FLOOR_Y + 0.06; // floor surface
     const halfW = CABIN_WIDTH / 2;
@@ -111,12 +116,14 @@ export class App {
     );
     scene.add(coffeeMug.mesh);
 
-    // Logbook on side shelf (shelf is in back +Z half)
+    // Logbook on nightstand (living area, beside bed)
+    const nsX = halfW - 0.12 - 0.39 - 0.78 / 2 - 0.2; // nightstand X
+    const nsTopY = CABIN_FLOOR_Y + 0.06 + 0.4 + 0.02;  // nightstand top surface
     const logbook = new InteractableObject(
       'logbook',
       new THREE.BoxGeometry(0.15, 0.03, 0.2),
       new THREE.MeshStandardMaterial({ color: 0x554422, roughness: 0.9, metalness: 0.0 }),
-      new THREE.Vector3(-halfW + 0.35, CABIN_FLOOR_Y + CABIN_WIDTH * 0.15 + 0.02, halfD * 0.3),
+      new THREE.Vector3(nsX, nsTopY, 0.3 + 0.15),
     );
     scene.add(logbook.mesh);
 

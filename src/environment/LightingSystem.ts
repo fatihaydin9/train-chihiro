@@ -12,10 +12,10 @@ export class LightingSystem implements Updatable {
   private dayNightInfluence = 1.0;
 
   // Biome base values
-  private biomeAmbientColor = new THREE.Color(0.55, 0.6, 0.7);
-  private biomeAmbientIntensity = 0.5;
-  private biomeDirectionalColor = new THREE.Color(1, 0.82, 0.63);
-  private biomeDirectionalIntensity = 1.0;
+  private biomeAmbientColor = new THREE.Color(55 / 255, 60 / 255, 70 / 255);
+  private biomeAmbientIntensity = 0.25;
+  private biomeDirectionalColor = new THREE.Color(80 / 255, 85 / 255, 100 / 255);
+  private biomeDirectionalIntensity = 0.2;
 
   constructor(scene: THREE.Scene, private eventBus: EventBus) {
     this.ambient = new THREE.AmbientLight(0x8899bb, 0.5);

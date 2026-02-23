@@ -17,8 +17,8 @@ export class SkySystem implements Updatable {
 
   // Current state
   private timeOfDay = 0.35;
-  private biomeHorizon = new THREE.Color(0.5, 0.55, 0.65);
-  private biomeSky = new THREE.Color(0.4, 0.5, 0.7);
+  private biomeHorizon = new THREE.Color(65 / 255, 65 / 255, 72 / 255);
+  private biomeSky = new THREE.Color(40 / 255, 45 / 255, 55 / 255);
   private dayNightInfluence = 1.0;
 
   // Day/night palette

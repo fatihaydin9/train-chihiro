@@ -10,8 +10,8 @@ export const GROUND_Y = -1.5; // ground plane Y position (player at origin)
 export const TRACK_Y = GROUND_Y + 0.05;
 
 // Terrain noise
-export const TERRAIN_SEGMENTS_X = 40;
-export const TERRAIN_SEGMENTS_Z = 20;
+export const TERRAIN_SEGMENTS_X = 48;
+export const TERRAIN_SEGMENTS_Z = 24;
 export const TERRAIN_AMPLITUDE = 4.0;
 export const TERRAIN_FREQUENCY = 0.02;
 export const TERRAIN_OCTAVES = 3;

@@ -12,14 +12,14 @@ export class FogSystem implements Updatable {
   private timeOfDay = 0.35;
   private isTunnel = false;
 
-  // Biome base values
-  private biomeFogColor = new THREE.Color(0.6, 0.67, 0.75);
-  private biomeFogFar = 160;
+  // Biome base values (thunderstorm defaults)
+  private biomeFogColor = new THREE.Color(60 / 255, 65 / 255, 70 / 255);
+  private biomeFogFar = 60;
 
   constructor(scene: THREE.Scene, private eventBus: EventBus) {
-    // Convert initial fogFar to exponential density — lower values = less fog
-    const initialDensity = 1.5 / (160 * 0.75);
-    this.fog = new THREE.FogExp2(0x9aabbf, initialDensity);
+    // Convert initial fogFar to exponential density
+    const initialDensity = 2.5 / 60;
+    this.fog = new THREE.FogExp2(0x3c4146, initialDensity);
     scene.fog = this.fog;
 
     this.eventBus.on('biome:transition-tick', (config) => {
@@ -45,8 +45,8 @@ export class FogSystem implements Updatable {
       return;
     }
 
-    // Base density from biome fogFar — reduced for clearer views
-    const baseDensity = 1.5 / (this.biomeFogFar * 0.75);
+    // Base density from biome fogFar
+    const baseDensity = 2.5 / this.biomeFogFar;
 
     // Night: pull fog darker, denser
     const sinVal = Math.sin(this.timeOfDay * Math.PI * 2 - Math.PI / 2);
@@ -60,9 +60,9 @@ export class FogSystem implements Updatable {
     );
     this.fog.color.lerpColors(nightFogColor, this.biomeFogColor, dayFactor);
 
-    // Night density × 1.5, day density × 0.7 — much less fog overall
-    const nightDensity = baseDensity * 1.5;
-    const dayDensity = baseDensity * 0.7;
+    // Night density × 1.8, day density × 1.0
+    const nightDensity = baseDensity * 1.8;
+    const dayDensity = baseDensity * 1.0;
     this.fog.density = lerp(nightDensity, dayDensity, dayFactor);
   }
 }

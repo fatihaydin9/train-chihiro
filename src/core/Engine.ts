@@ -31,8 +31,7 @@ export class Engine {
       0.1,
       500,
     );
-    this.camera.position.set(0, 0.2, -1.0); // seated behind control desk
-    this.camera.lookAt(0, 0.2, -10);       // face forward toward windshield (-Z)
+    this.camera.position.set(0, 0.2, -1.0); // initial position, overridden by DesktopCameraController
 
     // Scene
     this.scene = new THREE.Scene();

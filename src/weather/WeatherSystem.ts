@@ -48,10 +48,19 @@ export class WeatherSystem implements Updatable {
     const config = WEATHER_CONFIGS[type];
     if (!config) return;
 
-    this.nextEmitter = new ParticleEmitter(config);
-    this.nextEmitter.setOpacity(0);
-    this.scene.add(this.nextEmitter.points);
+    const emitter = new ParticleEmitter(config);
+    this.scene.add(emitter.points);
     this.currentType = type;
+
+    if (!this.currentEmitter) {
+      // First weather — show immediately at full intensity
+      emitter.setOpacity(intensity);
+      this.currentEmitter = emitter;
+    } else {
+      // Crossfade from current
+      emitter.setOpacity(0);
+      this.nextEmitter = emitter;
+    }
   }
 
   private finishCrossfade(): void {

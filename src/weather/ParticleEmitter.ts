@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import type { ParticleConfig } from './types';
+import {
+  CABIN_WIDTH, CABIN_DEPTH, CABIN_FLOOR_Y, CABIN_HEIGHT,
+} from '../utils/constants';
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
@@ -9,10 +12,13 @@ const vertexShader = /* glsl */ `
   uniform float uDrift;
   uniform float uWind;
   uniform float uRise;
+  uniform vec3 uCabinMin;
+  uniform vec3 uCabinMax;
 
   attribute float aOffset;
 
   varying float vAlpha;
+  varying float vIsStreak;
 
   void main() {
     vec3 pos = position;
@@ -25,8 +31,18 @@ const vertexShader = /* glsl */ `
 
     vAlpha = smoothstep(0.0, 0.1, t) * smoothstep(1.0, 0.9, t);
 
+    // Hide particles inside the train cabin
+    if (pos.x > uCabinMin.x && pos.x < uCabinMax.x &&
+        pos.y > uCabinMin.y && pos.y < uCabinMax.y &&
+        pos.z > uCabinMin.z && pos.z < uCabinMax.z) {
+      vAlpha = 0.0;
+    }
+
+    // Pass streak hint: speed > 5 means rain/storm type → render as streak
+    vIsStreak = uSpeed > 5.0 ? 1.0 : 0.0;
+
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = ${/* will be set per-config */ ''}size * (300.0 / -mvPosition.z);
+    gl_PointSize = INJECT_SIZE * (300.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -36,13 +52,34 @@ const fragmentShader = /* glsl */ `
   uniform float uOpacity;
 
   varying float vAlpha;
+  varying float vIsStreak;
 
   void main() {
-    // Soft circle
-    float dist = length(gl_PointCoord - vec2(0.5));
-    if (dist > 0.5) discard;
-    float alpha = smoothstep(0.5, 0.2, dist) * vAlpha * uOpacity;
-    gl_FragColor = vec4(uColor, alpha);
+    vec2 uv = gl_PointCoord - vec2(0.5);
+
+    if (vIsStreak > 0.5) {
+      // Minecraft-style diagonal rain streak
+      // Rotate UV 20 degrees for diagonal effect
+      float angle = 0.35;
+      float ca = cos(angle);
+      float sa = sin(angle);
+      vec2 ruv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
+
+      // Thin vertical streak: narrow in X, full in Y
+      float streakWidth = 0.06;
+      float dx = abs(ruv.x) / streakWidth;
+      float dy = abs(ruv.y) / 0.5;
+      if (dx > 1.0 || dy > 1.0) discard;
+
+      float alpha = (1.0 - dx) * (1.0 - dy * dy) * vAlpha * uOpacity;
+      gl_FragColor = vec4(uColor, alpha);
+    } else {
+      // Default: soft circle for snow, petals, etc.
+      float dist = length(uv);
+      if (dist > 0.5) discard;
+      float alpha = smoothstep(0.5, 0.2, dist) * vAlpha * uOpacity;
+      gl_FragColor = vec4(uColor, alpha);
+    }
   }
 `;
 
@@ -68,8 +105,21 @@ export class ParticleEmitter {
 
     // Inject size into vertex shader
     const vs = vertexShader.replace(
-      `size * (300.0 / -mvPosition.z)`,
-      `${config.size.toFixed(3)} * (300.0 / -mvPosition.z)`,
+      'INJECT_SIZE',
+      config.size.toFixed(3),
+    );
+
+    // Cabin bounding box (with a small margin)
+    const margin = 0.2;
+    const cabinMin = new THREE.Vector3(
+      -CABIN_WIDTH / 2 - margin,
+      CABIN_FLOOR_Y - margin,
+      -CABIN_DEPTH / 2 - margin,
+    );
+    const cabinMax = new THREE.Vector3(
+      CABIN_WIDTH / 2 + margin,
+      CABIN_FLOOR_Y + CABIN_HEIGHT + margin,
+      CABIN_DEPTH / 2 + margin,
     );
 
     this.material = new THREE.ShaderMaterial({
@@ -85,6 +135,8 @@ export class ParticleEmitter {
         uRise: { value: config.rises ? 1.0 : 0.0 },
         uColor: { value: new THREE.Color(config.color) },
         uOpacity: { value: config.opacity },
+        uCabinMin: { value: cabinMin },
+        uCabinMax: { value: cabinMax },
       },
       transparent: true,
       depthWrite: false,

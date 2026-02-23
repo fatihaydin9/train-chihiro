@@ -14,27 +14,27 @@ export class TrainMotion implements Updatable {
   constructor(private rig: THREE.Group) {}
 
   update(_dt: number, elapsed: number): void {
-    // Lateral sway (slow, gentle)
-    const swayX = Math.sin(elapsed * 0.7) * 0.015;
+    // Lateral sway (slow, very gentle)
+    const swayX = Math.sin(elapsed * 0.5) * 0.006;
 
-    // Vertical bounce (faster, subtle)
-    const bounceY = Math.sin(elapsed * 2.5) * 0.008;
+    // Vertical bounce (subtle)
+    const bounceY = Math.sin(elapsed * 1.8) * 0.003;
 
-    // Micro-jitter: random ±1.5mm every 50ms
-    if (elapsed - this.lastJitterTime > 0.05) {
+    // Micro-jitter: very subtle ±0.5mm every 120ms (smooth, not jarring)
+    if (elapsed - this.lastJitterTime > 0.12) {
       this.lastJitterTime = elapsed;
-      this.jitterX = (Math.random() - 0.5) * 0.003;
-      this.jitterY = (Math.random() - 0.5) * 0.003;
+      this.jitterX = (Math.random() - 0.5) * 0.001;
+      this.jitterY = (Math.random() - 0.5) * 0.001;
     }
 
     this.rig.position.x = swayX + this.jitterX;
     this.rig.position.y = bounceY + this.jitterY;
 
-    // Pitch (nod forward/back)
-    const pitch = Math.sin(elapsed * 1.2) * 0.003;
+    // Pitch (very subtle nod)
+    const pitch = Math.sin(elapsed * 0.8) * 0.001;
 
-    // Roll (lean side to side)
-    const roll = Math.sin(elapsed * 0.9) * 0.002;
+    // Roll (barely perceptible lean)
+    const roll = Math.sin(elapsed * 0.6) * 0.0008;
 
     this.rig.rotation.x = pitch;
     this.rig.rotation.z = roll;

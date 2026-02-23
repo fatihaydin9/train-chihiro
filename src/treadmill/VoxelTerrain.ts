@@ -9,6 +9,7 @@ import { smoothstep, lerp } from '../utils/math';
 import { SimplexNoise2D, fbm2D } from '../utils/noise';
 
 const terrainNoise = new SimplexNoise2D(TERRAIN_NOISE_SEED);
+const colorNoise = new SimplexNoise2D(TERRAIN_NOISE_SEED + 7);
 const HALF_WIDTH = CHUNK_WIDTH / 2;
 const HALF_DEPTH = CHUNK_DEPTH / 2;
 
@@ -96,6 +97,25 @@ export class VoxelTerrain {
     );
     this.geometry.rotateX(-Math.PI / 2);
 
+    // Replace default index buffer with alternating diagonals
+    // to eliminate systematic vertical stripe artifacts on slopes.
+    const cols = TERRAIN_SEGMENTS_X + 1;
+    const newIndices: number[] = [];
+    for (let iz = 0; iz < TERRAIN_SEGMENTS_Z; iz++) {
+      for (let ix = 0; ix < TERRAIN_SEGMENTS_X; ix++) {
+        const a = ix + cols * iz;             // top-left
+        const b = ix + cols * (iz + 1);       // bottom-left
+        const c = (ix + 1) + cols * (iz + 1); // bottom-right
+        const d = (ix + 1) + cols * iz;       // top-right
+        if ((ix + iz) % 2 === 0) {
+          newIndices.push(a, b, c, a, c, d);
+        } else {
+          newIndices.push(a, b, d, b, c, d);
+        }
+      }
+    }
+    this.geometry.setIndex(newIndices);
+
     this.material = new THREE.MeshStandardMaterial({
       vertexColors: true,
       roughness: 0.92,
@@ -131,12 +151,27 @@ export class VoxelTerrain {
     const pAmp = prevAmplitude ?? amplitude;
     const nAmp = nextAmplitude ?? amplitude;
 
+    // Small offset for finite-difference normal computation
+    const eps = 0.5;
+    const normals = this.geometry.attributes.normal;
+
     for (let i = 0; i < positions.count; i++) {
       const localX = positions.getX(i);
       const localZ = positions.getZ(i);
 
       const height = computeHeight(localX, localZ, worldZ, amplitude, pAmp, nAmp);
       positions.setY(i, height);
+
+      // Compute smooth normal via finite differences (triangulation-independent)
+      const hL = computeHeight(localX - eps, localZ, worldZ, amplitude, pAmp, nAmp);
+      const hR = computeHeight(localX + eps, localZ, worldZ, amplitude, pAmp, nAmp);
+      const hB = computeHeight(localX, localZ - eps, worldZ, amplitude, pAmp, nAmp);
+      const hF = computeHeight(localX, localZ + eps, worldZ, amplitude, pAmp, nAmp);
+      const nx = hL - hR;
+      const nz = hB - hF;
+      const ny = 2.0 * eps;
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+      normals.setXYZ(i, nx / len, ny / len, nz / len);
 
       // Vertex color
       const wx = localX * TERRAIN_FREQUENCY;
@@ -146,9 +181,7 @@ export class VoxelTerrain {
         TERRAIN_OCTAVES, TERRAIN_LACUNARITY, TERRAIN_PERSISTENCE,
       );
       const heightT = Math.max(0, noiseVal) * 0.5 + 0.25;
-      const ix = Math.floor((localX + HALF_WIDTH) * 2);
-      const iz = Math.floor((localZ + HALF_DEPTH) * 2);
-      const variation = (((ix * 31 + iz * 17) % 100) / 100) * 0.1 - 0.05;
+      const variation = colorNoise.noise2D(localX * 0.15, (localZ + worldZ) * 0.15) * 0.05;
       colors.setXYZ(
         i,
         baseColor.r + (altColor.r - baseColor.r) * heightT + variation,
@@ -158,8 +191,8 @@ export class VoxelTerrain {
     }
 
     positions.needsUpdate = true;
+    normals.needsUpdate = true;
     colors.needsUpdate = true;
-    this.geometry.computeVertexNormals();
 
     // Rebuild skirt from updated edge vertices
     this.buildSkirt(baseColor);
