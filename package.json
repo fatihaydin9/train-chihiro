@@ -1,0 +1,23 @@
+{
+  "name": "endlesstrain",
+  "version": "1.0.0",
+  "description": "North Express — WebXR endless train cozy experience",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.170.0",
+    "@types/webxr": "^0.5.20",
+    "@vitejs/plugin-basic-ssl": "^2.0.0",
+    "terser": "^5.36.0",
+    "typescript": "^5.5.3",
+    "vite": "^6.0.0"
+  },
+  "private": true
+}
