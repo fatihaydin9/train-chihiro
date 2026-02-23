@@ -2,7 +2,7 @@
 export const CHUNK_DEPTH = 40; // meters along Z
 export const CHUNK_WIDTH = 80; // meters along X
 export const CHUNK_COUNT = 8;
-export const WORLD_SPEED = 15; // m/s along +Z toward player
+export const WORLD_SPEED = 8; // m/s along +Z toward player
 export const TRACK_GAUGE = 1.435; // standard gauge in meters
 
 // Terrain
@@ -59,4 +59,4 @@ export const RIVER_PROBABILITY = 0.15;
 export const BRIDGE_HEIGHT = 3.0;
 
 // Day/night cycle — faster for more dynamic atmosphere
-export const DAY_CYCLE_DURATION = 180; // seconds for full cycle
+export const DAY_CYCLE_DURATION = 540; // seconds for full cycle (3x slower)

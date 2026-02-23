@@ -15,6 +15,7 @@ import { CabinSetup } from './cabin/CabinSetup';
 import { TrainBodyAhead } from './cabin/TrainBodyAhead';
 import { TrainMotion } from './cabin/TrainMotion';
 import { StoveLight } from './cabin/StoveLight';
+import { WindowEffects } from './cabin/WindowEffects';
 import { InteractableObject } from './cabin/InteractableObject';
 import { VRInputManager } from './interaction/VRInputManager';
 import { GrabSystem } from './interaction/GrabSystem';
@@ -92,6 +93,10 @@ export class App {
 
     const stoveLight = new StoveLight(scene);
     this.loop.addSystem(stoveLight);
+
+    // --- Window Effects (frost, fog, rain drops on glass) ---
+    const windowEffects = new WindowEffects(scene, this.eventBus);
+    this.loop.addSystem(windowEffects);
 
     // --- Train Motion (camera rig vibration/sway) ---
     const trainMotion = new TrainMotion(this.engine.cameraRig);
