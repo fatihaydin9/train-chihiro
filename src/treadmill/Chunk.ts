@@ -116,11 +116,12 @@ export class Chunk {
     this.seed = Math.random() * 100000;
     const rng = seededRandom(this.seed);
 
-    if (!biome.isTunnel) {
-      this.spawnFloraByBand(biome.floraDistribution.near, rng, FLORA_NEAR_MIN, FLORA_NEAR_MAX);
-      this.spawnFloraByBand(biome.floraDistribution.far, rng, FLORA_FAR_MIN, FLORA_FAR_MAX);
+    // Spawn flora in all biomes (including cave tunnels for stalactites etc.)
+    this.spawnFloraByBand(biome.floraDistribution.near, rng, FLORA_NEAR_MIN, FLORA_NEAR_MAX);
+    this.spawnFloraByBand(biome.floraDistribution.far, rng, FLORA_FAR_MIN, FLORA_FAR_MAX);
 
-      // Maybe generate river
+    if (!biome.isTunnel) {
+      // Maybe generate river (not inside tunnels)
       this.maybeGenerateRiver(biome, rng);
     }
   }

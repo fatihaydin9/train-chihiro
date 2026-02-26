@@ -7,7 +7,7 @@ import { DAY_CYCLE_DURATION } from '../utils/constants';
  * Emits 'daytime:tick' each frame with current time and whether it's daytime.
  */
 export class DayNightCycle implements Updatable {
-  private timeOfDay = 0.32; // Start at dawn-to-day transition
+  private timeOfDay = 0.45; // Start mid-day — overcast storm hides it anyway
 
   constructor(private eventBus: EventBus) {}
 

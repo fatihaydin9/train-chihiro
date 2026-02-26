@@ -1,66 +1,66 @@
-# Endless Train
+# 海原電鉄 Unabara Dentetsu
 
-A WebXR experience where you sit inside a locomotive cabin and watch procedurally generated landscapes roll by. Built with Three.js and TypeScript. Works on desktop browsers and VR headsets.
+*Sea Plain Railway — inspired by Hayao Miyazaki's Spirited Away*
+
+A WebXR train journey through procedurally generated landscapes. You ride an endless railway that crosses oceans in storms, passes through dense jungles, dives into crystal-lit caves, and emerges into neon cities at night. Built with Three.js and TypeScript. Works on desktop and VR headsets.
+
+The name comes from the train Chihiro rides in *Spirited Away* (千と千尋の神隠し) — the one that runs on tracks submerged in water, carrying passengers across a flooded plain toward the horizon. This project tries to capture that same feeling: sitting in a quiet cabin, watching the world drift by through rain-streaked windows.
 
 ![Screenshot](src/example/exp.png)
 
-## What is this
+## The journey
 
-You're riding a train that never stops. Outside the window, biomes change — snowy forests, autumn villages, ocean crossings in a storm, dark tunnels with neon lights, construction sites. The terrain is generated on the fly using noise functions, so the ride never repeats. Weather shifts between rain, snow, blizzards, and clear skies. Day turns to night and back again.
+The train follows a 16-biome loop that always starts the same way — on water, in a storm:
 
-Inside the cabin there's a control dashboard, a bed, a small kitchen, and a lantern you can toggle. In VR you can grab the coffee mug or the logbook on the nightstand.
+**ocean** → village → spring meadow → autumn forest → **amazon** → **cave** → tunnel → industrial → dark city → suburban → construction → wilderness → thunderstorm → frozen waste → polar → arctic coast → *back to ocean*
+
+Each biome lasts one full day/night cycle (8 minutes). Transitions between biomes take 15 seconds — every parameter crossfades smoothly. After arctic coast, the loop restarts from the ocean crossing.
 
 ## How terrain works
 
-The world is an infinite treadmill. Eight chunks of terrain (each 40m deep, 80m wide) sit in a pool. As the train moves forward, the chunk that falls behind gets recycled to the front with a new terrain configuration.
+The world is an infinite treadmill. Eight terrain chunks (40m × 80m each) cycle in a pool. As the train moves, the rearmost chunk jumps to the front with fresh terrain.
 
-Terrain height is generated with **2D Simplex noise** layered through **Fractal Brownian Motion** (FBM). Three octaves of noise are stacked — each octave doubles the frequency and halves the amplitude — which gives the terrain a natural mix of broad hills and fine detail. The noise is seeded (seed 42), so terrain generation is deterministic but looks organic.
+Height is generated with **2D Simplex noise** layered through **Fractal Brownian Motion** (FBM):
 
 ```
-height = fbm(simplex2D, x * freq, z * freq, octaves=3, lacunarity=2.0, persistence=0.5)
+height = fbm(simplex2D, x * 0.02, z * 0.02, octaves=3, lacunarity=2.0, persistence=0.5)
 ```
 
-A sine-based clearance profile keeps the area around the tracks flat, so the train doesn't clip through hills. The amplitude scales per-biome — polar regions get tall ridges, ocean biome stays nearly flat.
+Three octaves stack together — each doubles the frequency and halves the amplitude — producing terrain with both broad hills and fine detail. A sine clearance profile keeps the track area flat. The noise is seeded (42), so generation is deterministic.
 
-Ground color is also noise-driven. Two ground colors from the current biome are blended based on a separate noise sample, giving the terrain a patchy, natural look instead of a single flat color.
+Ground color blends two biome-defined tones using a separate noise sample, giving a patchy organic look.
 
-## Biome system
+## Biomes
 
-There are 16 biomes that cycle in a fixed order:
+Each biome defines fog, sky, lighting, ground colors, flora rules, weather, and terrain amplitude. Some highlights:
 
-spring meadow → village → autumn forest → amazon → thunderstorm → suburban → ocean → wilderness → cave → tunnel → industrial → construction → dark city → frozen waste → polar → arctic coast
+- **Ocean** — flat seabed with coral, seaweed, sunken ruins visible through transparent water. Storm weather, lightning, heavy rain.
+- **Amazon** — towering jungle trees (up to 10× scale), hanging vines, giant leaves, ferns, overgrown stone ruins. Heavy storm with lightning.
+- **Cave** — brown tunnel with stalactites hanging from above, stalagmites rising from the floor, glowing crystals, bioluminescent mushrooms, puddles on the ground.
+- **Polar** — frozen pines, ice pillars, aurora borealis at night.
+- **Dark city** — neon signs, skyscrapers, street lamps in fog.
 
-Each biome defines its own fog, sky colors, lighting, ground palette, flora types, weather, and terrain amplitude. Transitions between biomes take about 15 seconds — every parameter (colors, fog distance, light intensity, terrain height) gets smoothly interpolated frame by frame using a `BiomeLerper`. No hard cuts.
+## Flora
 
-## Flora and voxel models
+All objects are built from geometric primitives — cylinders, cones, spheres, icosahedrons, boxes. No external 3D models. Each biome specifies spawn rules: which models, how many, at what scale, in which distance band from the track. Everything renders with instanced meshes.
 
-Trees, rocks, buildings, and other objects are built from voxel-style geometry — combinations of boxes, cylinders, cones, and spheres. Each biome specifies what models to spawn and how many, split into near-field (5–15m from the track) and far-field (15–38m). Models are rendered with instanced meshes for performance.
-
-Some examples: `pine_snow` is a cylinder trunk with stacked cones and snow caps. `city_building_small` is a stack of colored boxes with window holes. `lighthouse` is a tapered cylinder with an emissive top.
+Over 120 model types: pine trees with snow caps, autumn oaks, coral branches, stalactites, jungle vines, city buildings, lighthouses, sunken ships, igloos, cranes, mushrooms.
 
 ## Weather
 
-12 weather types: snow, rain, blizzard, storm, drizzle, frost, leaves, ash, petals, hail, smog, sandstorm. Each type is a particle system with its own count, size, speed, color, and drift parameters. Storm mode throws 18,000 particles at high speed. Snow drifts gently at 2 m/s.
+12 weather types with particle systems: snow, rain, blizzard, storm, drizzle, frost, leaves, ash, petals, hail, smog, sandstorm. Storm mode runs 18,000 particles. Weather crossfades between biomes.
 
-When biomes transition, the weather crossfades — old particles fade out while new ones fade in.
-
-Lightning in storm biomes uses a multi-phase flash sequence (initial flash → brief dark → main flash → sustain → slow decay) instead of a simple on/off blink. Occasionally a third re-flash fires for extra realism.
+Lightning uses multi-phase flash sequences — initial flash, brief dark, main flash, sustain, slow decay — with occasional re-flashes. Not a simple on/off blink.
 
 ## Day/night cycle
 
-A full day takes 8 minutes. Dawn starts around 20% through the cycle, dusk ends around 80%. Transitions use smoothstep easing so sunrise and sunset feel gradual, not abrupt.
-
-The sun follows an arc across the sky with power-eased sine movement — it rises slowly, lingers near the top, and sets slowly. Stars fade in during dusk and out during dawn. Polar biomes get aurora borealis at night.
-
-Lighting, sky gradient, fog color, and ambient intensity all respond to the time of day.
+Full cycle: 8 minutes. Dawn transitions and sunset use smoothstep easing for gradual shifts. The sun arc uses power-eased sine so it lingers at the top and sets slowly. Stars fade with the transitions. Polar biomes show aurora borealis at night.
 
 ## The cabin
 
-The interior is a 3m × 3m × 6m space. Front half has the driving console with levers, gauges, and buttons. Back half has a bed, nightstand with a lantern, and a small kitchen counter with a stove.
+3m × 3m × 6m interior. Front: driving console with levers, gauges, buttons. Back: bed, nightstand with lantern, small kitchen. Windows get frost in cold biomes and rain streaks in storms.
 
-Windows use a shader overlay that adds frost patterns in cold biomes and rain streaks during storms.
-
-All audio is procedurally generated — no sample files. Train sounds come from layered noise generators: brown noise through a lowpass for the rumble, bandpass-filtered noise for the wheel hum, highpass noise for the rail hiss, and a periodic burst for the rail joint clack. Rain is three layers of filtered noise plus periodic drip sounds. Wind is shaped pink noise.
+All audio is procedural — no samples. Train rumble is brown noise through a lowpass. Wheel hum is bandpass-filtered noise. Rail clack is a periodic burst. Rain is three filtered noise layers plus drip sounds.
 
 ## Running it
 
@@ -69,12 +69,16 @@ npm install
 npm run dev
 ```
 
-Opens at `https://localhost:5173`. HTTPS is required for WebXR. Use mouse to look around on desktop, or connect a VR headset.
+Opens at `https://localhost:5173`. HTTPS is needed for WebXR.
 
 ## Stack
 
-- **Three.js** — rendering, scene graph, shaders
-- **TypeScript** — all source code
+- **Three.js** — rendering, shaders, scene graph
+- **TypeScript** — all source
 - **Vite** — dev server and bundler
-- **Web Audio API** — procedural sound synthesis
+- **Web Audio API** — procedural sound
 - **WebXR** — VR headset support
+
+## Acknowledgment
+
+This project is a love letter to Studio Ghibli and Hayao Miyazaki's work. The ocean train sequence in *Spirited Away* is one of the most beautiful moments in animation — quiet, melancholic, and vast. We wanted to sit in that train and never get off.

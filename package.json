@@ -1,7 +1,7 @@
 {
-  "name": "endlesstrain",
+  "name": "unabara-dentetsu",
   "version": "1.0.0",
-  "description": "North Express — WebXR endless train cozy experience",
+  "description": "海原電鉄 Unabara Dentetsu — A Miyazaki-inspired WebXR train journey across endless landscapes",
   "type": "module",
   "scripts": {
     "dev": "vite",

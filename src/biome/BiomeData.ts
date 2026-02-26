@@ -493,35 +493,37 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
   },
   ocean: {
     name: 'ocean',
-    fogColor: rgb(65, 75, 85),
-    fogNear: 15,
-    fogFar: 120,
-    skyColor: rgb(45, 50, 60),
-    skyColorHorizon: rgb(60, 68, 78),
-    ambientColor: rgb(55, 65, 80),
+    fogColor: rgb(55, 68, 80),
+    fogNear: 12,
+    fogFar: 100,
+    skyColor: rgb(40, 48, 58),
+    skyColorHorizon: rgb(55, 65, 75),
+    ambientColor: rgb(50, 60, 75),
     ambientIntensity: 0.35,
-    directionalColor: rgb(100, 110, 125),
-    directionalIntensity: 0.3,
-    groundColor: rgb(55, 90, 100),
-    groundColorAlt: rgb(45, 80, 95),
-    trackColor: rgb(75, 85, 95),
-    floraTypes: ['lighthouse', 'buoy', 'pier_post'],
-    terrainAmplitude: 0.2,
+    directionalColor: rgb(90, 100, 115),
+    directionalIntensity: 0.25,
+    groundColor: rgb(25, 50, 65),
+    groundColorAlt: rgb(20, 42, 58),
+    trackColor: rgb(50, 60, 70),
+    floraTypes: ['seaweed_tall', 'coral_branch', 'coral_fan'],
+    terrainAmplitude: 0.3,
     floraDistribution: {
       near: [
-        { model: 'pier_post', count: 6, scaleMin: 1.5, scaleMax: 2.5 },
-        { model: 'buoy', count: 4, scaleMin: 1.0, scaleMax: 2.0 },
-        { model: 'barrel', count: 3, scaleMin: 1.0, scaleMax: 1.5 },
+        { model: 'seaweed_tall', count: 12, scaleMin: 1.5, scaleMax: 3.5 },
+        { model: 'coral_branch', count: 6, scaleMin: 1.5, scaleMax: 3.0 },
+        { model: 'coral_fan', count: 5, scaleMin: 1.5, scaleMax: 2.5 },
+        { model: 'sea_lantern', count: 3, scaleMin: 1.5, scaleMax: 2.5 },
       ],
       far: [
-        { model: 'lighthouse', count: 2, scaleMin: 3.0, scaleMax: 5.0 },
-        { model: 'fishing_boat', count: 3, scaleMin: 2.0, scaleMax: 3.5 },
-        { model: 'sea_rock', count: 5, scaleMin: 1.5, scaleMax: 3.0 },
-        { model: 'pier_post', count: 8, scaleMin: 2.0, scaleMax: 3.0 },
-        { model: 'seagull_perch', count: 4, scaleMin: 1.5, scaleMax: 2.5 },
+        { model: 'seaweed_tall', count: 15, scaleMin: 2.0, scaleMax: 4.0 },
+        { model: 'coral_branch', count: 8, scaleMin: 2.0, scaleMax: 4.0 },
+        { model: 'sea_ruin_pillar', count: 4, scaleMin: 2.0, scaleMax: 4.0 },
+        { model: 'sea_ruin_arch', count: 2, scaleMin: 2.5, scaleMax: 4.0 },
+        { model: 'sea_dome', count: 2, scaleMin: 2.0, scaleMax: 3.5 },
+        { model: 'sunken_ship', count: 1, scaleMin: 2.5, scaleMax: 4.0 },
       ],
     },
-    distantModels: ['lighthouse', 'fishing_boat', 'sea_rock'],
+    distantModels: ['sea_ruin_pillar', 'sea_dome', 'sunken_ship'],
     weatherType: 'storm',
     weatherIntensity: 1.0,
     windStrength: 0.9,
@@ -597,18 +599,19 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     terrainAmplitude: 3.0,
     floraDistribution: {
       near: [
-        { model: 'jungle_vine', count: 8, scaleMin: 2.0, scaleMax: 4.0 },
-        { model: 'giant_leaf', count: 6, scaleMin: 1.5, scaleMax: 3.0 },
-        { model: 'jungle_fern', count: 10, scaleMin: 1.5, scaleMax: 3.0 },
-        { model: 'jungle_mushroom', count: 4, scaleMin: 1.0, scaleMax: 2.0 },
+        { model: 'jungle_tree', count: 6, scaleMin: 3.0, scaleMax: 5.0 },
+        { model: 'jungle_vine', count: 12, scaleMin: 2.5, scaleMax: 5.0 },
+        { model: 'giant_leaf', count: 10, scaleMin: 2.0, scaleMax: 4.5 },
+        { model: 'jungle_fern', count: 14, scaleMin: 2.0, scaleMax: 4.0 },
+        { model: 'jungle_mushroom', count: 5, scaleMin: 1.5, scaleMax: 3.0 },
       ],
       far: [
-        { model: 'jungle_tree', count: 14, scaleMin: 3.0, scaleMax: 6.0 },
-        { model: 'jungle_tree_tall', count: 8, scaleMin: 4.0, scaleMax: 8.0 },
-        { model: 'jungle_vine', count: 10, scaleMin: 2.5, scaleMax: 5.0 },
-        { model: 'giant_leaf', count: 8, scaleMin: 2.0, scaleMax: 4.0 },
-        { model: 'jungle_fern', count: 12, scaleMin: 2.0, scaleMax: 4.0 },
-        { model: 'jungle_ruins', count: 2, scaleMin: 2.5, scaleMax: 4.0 },
+        { model: 'jungle_tree_tall', count: 12, scaleMin: 5.0, scaleMax: 10.0 },
+        { model: 'jungle_tree', count: 16, scaleMin: 4.0, scaleMax: 8.0 },
+        { model: 'jungle_vine', count: 14, scaleMin: 3.0, scaleMax: 6.0 },
+        { model: 'giant_leaf', count: 10, scaleMin: 3.0, scaleMax: 6.0 },
+        { model: 'jungle_fern', count: 14, scaleMin: 2.5, scaleMax: 5.0 },
+        { model: 'jungle_ruins', count: 3, scaleMin: 3.0, scaleMax: 5.0 },
       ],
     },
     distantModels: ['jungle_tree_tall', 'jungle_tree', 'hill_gentle'],
@@ -715,20 +718,20 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
 };
 
 export const BIOME_ORDER = [
-  'spring_meadow',
-  'village',
-  'autumn_forest',
-  'amazon',
-  'thunderstorm',
-  'suburban',
-  'ocean',
-  'wilderness',
-  'cave',
-  'tunnel',
-  'industrial',
-  'construction',
-  'dark_city',
-  'frozen_waste',
-  'polar',
-  'arctic_coast',
+  'ocean',           // start: train on water in storm — the Chihiro moment
+  'village',         // arriving at a quiet coastal village
+  'spring_meadow',   // peaceful countryside, sun coming out
+  'autumn_forest',   // deeper into colored forests
+  'amazon',          // dense jungle, heavy storm
+  'cave',            // underground passage, stalactites
+  'tunnel',          // dark transit tunnel
+  'industrial',      // emerging into factories
+  'dark_city',       // neon-lit night city
+  'suburban',        // quieter residential outskirts
+  'construction',    // passing through building sites
+  'wilderness',      // back to untouched nature
+  'thunderstorm',    // dramatic open storm
+  'frozen_waste',    // cold barren landscape
+  'polar',           // arctic beauty, aurora
+  'arctic_coast',    // edge of the frozen world → loops back to ocean
 ];

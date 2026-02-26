@@ -14,8 +14,8 @@ export class BiomeController implements Updatable {
 
   constructor(private eventBus: EventBus) {
     this.lerper = new BiomeLerper();
-    // Start at a random biome
-    this.currentIndex = Math.floor(Math.random() * BIOME_ORDER.length);
+    // Always start at index 0 (ocean) — the iconic water crossing
+    this.currentIndex = 0;
   }
 
   update(dt: number, _elapsed: number): void {

@@ -1589,6 +1589,203 @@ export class VoxelRegistry {
         { type: 'cylinder', x: 0, y: 0.3, z: 0, params: [0.05, 0.05, 6], color: 0xaaaaaa },
       ],
     });
+
+    // =====================================================
+    // === JUNGLE / AMAZON MODELS ===
+    // =====================================================
+
+    // Giant jungle tree — massive trunk, wide canopy
+    this.registerSmooth({
+      name: 'jungle_tree',
+      parts: [
+        // Thick trunk
+        { type: 'cylinder', x: 0, y: 1.0, z: 0, params: [0.15, 2.0, 8], color: 0x3d2b1a },
+        // Buttress roots
+        { type: 'cone', x: 0.15, y: 0.2, z: 0, params: [0.08, 0.5, 4], color: 0x3d2b1a, scaleX: 0.5 },
+        { type: 'cone', x: -0.1, y: 0.2, z: 0.12, params: [0.07, 0.45, 4], color: 0x4a3522, scaleX: 0.5 },
+        { type: 'cone', x: 0, y: 0.2, z: -0.14, params: [0.07, 0.4, 4], color: 0x3d2b1a, scaleX: 0.5 },
+        // Dense canopy layers
+        { type: 'icosahedron', x: 0, y: 2.2, z: 0, params: [0.9, 1], color: 0x1a4a12 },
+        { type: 'icosahedron', x: 0.3, y: 2.4, z: 0.2, params: [0.7, 1], color: 0x225518 },
+        { type: 'icosahedron', x: -0.2, y: 2.5, z: -0.15, params: [0.6, 1], color: 0x1e4a14 },
+        { type: 'icosahedron', x: 0.1, y: 2.7, z: -0.2, params: [0.5, 1], color: 0x2a5a1e },
+      ],
+    });
+
+    // Towering jungle tree — very tall emergent tree
+    this.registerSmooth({
+      name: 'jungle_tree_tall',
+      parts: [
+        // Very tall trunk
+        { type: 'cylinder', x: 0, y: 2.0, z: 0, params: [0.2, 4.0, 8], color: 0x3a2818 },
+        // Mid branches
+        { type: 'cylinder', x: 0.25, y: 2.5, z: 0, params: [0.04, 0.8, 5], color: 0x3a2818 },
+        { type: 'cylinder', x: -0.2, y: 2.8, z: 0.15, params: [0.04, 0.7, 5], color: 0x3a2818 },
+        // Buttress roots
+        { type: 'cone', x: 0.2, y: 0.3, z: 0, params: [0.1, 0.7, 4], color: 0x3a2818, scaleX: 0.4 },
+        { type: 'cone', x: -0.15, y: 0.3, z: 0.15, params: [0.1, 0.6, 4], color: 0x4a3522, scaleX: 0.4 },
+        // Huge canopy — spread wide
+        { type: 'icosahedron', x: 0, y: 4.2, z: 0, params: [1.2, 1], color: 0x1a4a12, scaleY: 0.6 },
+        { type: 'icosahedron', x: 0.5, y: 4.0, z: 0.3, params: [0.8, 1], color: 0x225518, scaleY: 0.55 },
+        { type: 'icosahedron', x: -0.4, y: 4.3, z: -0.3, params: [0.9, 1], color: 0x1e4a14, scaleY: 0.6 },
+        { type: 'icosahedron', x: 0.2, y: 4.5, z: -0.4, params: [0.7, 1], color: 0x2a5a1e, scaleY: 0.5 },
+        // Hanging vines from canopy
+        { type: 'cone', x: 0.4, y: 3.2, z: 0.2, params: [0.03, 1.2, 4], color: 0x446622, scaleY: -1 },
+        { type: 'cone', x: -0.3, y: 3.4, z: -0.2, params: [0.02, 1.0, 4], color: 0x558833, scaleY: -1 },
+        { type: 'cone', x: 0.1, y: 3.1, z: -0.4, params: [0.025, 0.9, 4], color: 0x446622, scaleY: -1 },
+      ],
+    });
+
+    // Jungle vine — dangling from trees
+    this.registerSmooth({
+      name: 'jungle_vine',
+      parts: [
+        // Vertical vine strands
+        { type: 'cylinder', x: 0, y: 0.8, z: 0, params: [0.015, 1.6, 4], color: 0x3a6622 },
+        { type: 'cylinder', x: 0.08, y: 0.6, z: 0.05, params: [0.012, 1.2, 4], color: 0x448833 },
+        { type: 'cylinder', x: -0.06, y: 0.7, z: -0.04, params: [0.013, 1.4, 4], color: 0x3a7728 },
+        // Leaf clusters along vines
+        { type: 'dodecahedron', x: 0.02, y: 1.2, z: 0.03, params: [0.08, 0], color: 0x2a6618, scaleY: 0.4 },
+        { type: 'dodecahedron', x: -0.04, y: 0.6, z: -0.02, params: [0.07, 0], color: 0x337722, scaleY: 0.4 },
+        { type: 'dodecahedron', x: 0.06, y: 0.3, z: 0.04, params: [0.06, 0], color: 0x2a6618, scaleY: 0.35 },
+      ],
+    });
+
+    // Giant leaf — broad tropical leaf on stem
+    this.registerSmooth({
+      name: 'giant_leaf',
+      parts: [
+        // Stem
+        { type: 'cylinder', x: 0, y: 0.4, z: 0, params: [0.02, 0.8, 4], color: 0x336622 },
+        // Large flat leaf (squashed sphere)
+        { type: 'sphere', x: 0, y: 0.85, z: 0, params: [0.4, 8, 6], color: 0x228822, scaleY: 0.1 },
+        { type: 'sphere', x: 0.15, y: 0.9, z: 0.1, params: [0.25, 6, 4], color: 0x2a9928, scaleY: 0.08 },
+      ],
+    });
+
+    // Jungle fern — low-growing ground cover
+    this.registerSmooth({
+      name: 'jungle_fern',
+      parts: [
+        // Frond stems fanning out
+        { type: 'cone', x: 0.15, y: 0.3, z: 0, params: [0.01, 0.6, 4], color: 0x337722, scaleX: 2 },
+        { type: 'cone', x: -0.12, y: 0.28, z: 0.1, params: [0.01, 0.55, 4], color: 0x2a6618, scaleX: 2 },
+        { type: 'cone', x: 0, y: 0.25, z: -0.14, params: [0.01, 0.5, 4], color: 0x338828, scaleX: 2 },
+        { type: 'cone', x: -0.08, y: 0.3, z: -0.08, params: [0.01, 0.5, 4], color: 0x2a7722, scaleX: 2 },
+        // Leaf blobs at tips
+        { type: 'dodecahedron', x: 0.25, y: 0.45, z: 0, params: [0.1, 0], color: 0x228822, scaleY: 0.3 },
+        { type: 'dodecahedron', x: -0.2, y: 0.42, z: 0.15, params: [0.09, 0], color: 0x2a9928, scaleY: 0.3 },
+        { type: 'dodecahedron', x: 0, y: 0.4, z: -0.22, params: [0.08, 0], color: 0x228822, scaleY: 0.3 },
+      ],
+    });
+
+    // Jungle mushroom — large tropical mushroom
+    this.registerSmooth({
+      name: 'jungle_mushroom',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.2, z: 0, params: [0.05, 0.4, 6], color: 0x9a8866 },
+        { type: 'sphere', x: 0, y: 0.5, z: 0, params: [0.2, 8, 6], color: 0xcc5533, scaleY: 0.45 },
+        { type: 'sphere', x: 0, y: 0.52, z: 0, params: [0.15, 6, 4], color: 0xdd7744, scaleY: 0.3 },
+      ],
+    });
+
+    // Jungle ruins — overgrown stone blocks
+    this.register({
+      name: 'jungle_ruins',
+      cubes: [
+        // Base blocks
+        { x: 0, y: 0.25, z: 0, w: 0.8, h: 0.5, d: 0.6, color: 0x6a6a5a },
+        { x: 0.2, y: 0.6, z: 0.05, w: 0.5, h: 0.3, d: 0.45, color: 0x7a7a6a },
+        { x: -0.15, y: 0.55, z: -0.1, w: 0.35, h: 0.2, d: 0.35, color: 0x6a6a5a },
+        // Moss patches
+        { x: 0.3, y: 0.52, z: 0.2, w: 0.2, h: 0.04, d: 0.2, color: 0x336622 },
+        { x: -0.2, y: 0.35, z: 0.15, w: 0.15, h: 0.03, d: 0.15, color: 0x448833 },
+        // Vine on side
+        { x: 0.42, y: 0.35, z: 0, w: 0.03, h: 0.5, d: 0.03, color: 0x446622 },
+      ],
+    });
+
+    // =====================================================
+    // === CAVE MODELS — stalactites, stalagmites, crystals ===
+    // =====================================================
+
+    // Stalactite — hanging from ceiling (spawned inverted at height)
+    this.registerSmooth({
+      name: 'stalactite',
+      parts: [
+        // Main cone pointing down
+        { type: 'cone', x: 0, y: 0.6, z: 0, params: [0.15, 1.2, 6], color: 0x6a5842, scaleY: -1 },
+        // Smaller side drips
+        { type: 'cone', x: 0.12, y: 0.7, z: 0.05, params: [0.06, 0.5, 5], color: 0x7a6852, scaleY: -1 },
+        { type: 'cone', x: -0.08, y: 0.65, z: -0.08, params: [0.05, 0.4, 5], color: 0x6a5842, scaleY: -1 },
+        // Base attachment blob
+        { type: 'sphere', x: 0, y: 1.15, z: 0, params: [0.2, 6, 6], color: 0x5a4832, scaleY: 0.5 },
+      ],
+    });
+
+    // Stalagmite — growing up from ground
+    this.registerSmooth({
+      name: 'stalagmite',
+      parts: [
+        // Main cone pointing up
+        { type: 'cone', x: 0, y: 0.5, z: 0, params: [0.18, 1.0, 6], color: 0x6a5842 },
+        // Secondary spike
+        { type: 'cone', x: 0.1, y: 0.35, z: 0.06, params: [0.08, 0.7, 5], color: 0x7a6852 },
+        { type: 'cone', x: -0.07, y: 0.3, z: -0.05, params: [0.06, 0.5, 5], color: 0x5a4832 },
+        // Base blob
+        { type: 'sphere', x: 0, y: 0.08, z: 0, params: [0.22, 6, 6], color: 0x5a4832, scaleY: 0.35 },
+      ],
+    });
+
+    // Cave crystal — glowing mineral cluster
+    this.registerSmooth({
+      name: 'cave_crystal',
+      parts: [
+        // Crystal shards at angles
+        { type: 'cone', x: 0, y: 0.4, z: 0, params: [0.06, 0.8, 4], color: 0x44bbcc },
+        { type: 'cone', x: 0.1, y: 0.3, z: 0.05, params: [0.04, 0.6, 4], color: 0x55ccdd },
+        { type: 'cone', x: -0.08, y: 0.25, z: -0.06, params: [0.05, 0.5, 4], color: 0x33aabb },
+        { type: 'cone', x: 0.05, y: 0.35, z: -0.08, params: [0.035, 0.55, 4], color: 0x44bbcc },
+        // Base rock
+        { type: 'dodecahedron', x: 0, y: 0.08, z: 0, params: [0.12, 0], color: 0x4a4038, scaleY: 0.5 },
+      ],
+    });
+
+    // Cave pillar — stalactite meets stalagmite, full column
+    this.registerSmooth({
+      name: 'cave_pillar',
+      parts: [
+        // Thick column
+        { type: 'cylinder', x: 0, y: 1.0, z: 0, params: [0.2, 2.0, 7], color: 0x6a5842 },
+        // Bulges
+        { type: 'sphere', x: 0.05, y: 0.5, z: 0, params: [0.28, 6, 6], color: 0x5a4832, scaleY: 0.6 },
+        { type: 'sphere', x: -0.03, y: 1.5, z: 0.04, params: [0.25, 6, 6], color: 0x7a6852, scaleY: 0.55 },
+        // Top and bottom flare
+        { type: 'cone', x: 0, y: 2.1, z: 0, params: [0.3, 0.3, 6], color: 0x5a4832, scaleY: 0.4 },
+        { type: 'cone', x: 0, y: -0.05, z: 0, params: [0.3, 0.3, 6], color: 0x5a4832, scaleY: -0.4 },
+      ],
+    });
+
+    // Cave puddle — flat reflective pool on ground
+    this.registerSmooth({
+      name: 'cave_puddle',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.01, z: 0, params: [0.4, 0.02, 8], color: 0x334455 },
+        { type: 'cylinder', x: 0.1, y: 0.015, z: 0.05, params: [0.25, 0.015, 8], color: 0x445566 },
+      ],
+    });
+
+    // Cave mushroom — bioluminescent
+    this.registerSmooth({
+      name: 'cave_mushroom',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.12, z: 0, params: [0.03, 0.25, 6], color: 0x887766 },
+        { type: 'sphere', x: 0, y: 0.3, z: 0, params: [0.12, 8, 6], color: 0x55ddaa, scaleY: 0.45 },
+        // Small neighbor
+        { type: 'cylinder', x: 0.08, y: 0.08, z: 0.06, params: [0.02, 0.15, 5], color: 0x887766 },
+        { type: 'sphere', x: 0.08, y: 0.2, z: 0.06, params: [0.07, 6, 4], color: 0x44cc88, scaleY: 0.4 },
+      ],
+    });
   }
 }
 
