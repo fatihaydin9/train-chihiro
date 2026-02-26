@@ -4,13 +4,15 @@ import { BIOME_DEFINITIONS, BIOME_ORDER } from './BiomeData';
 import { BiomeLerper } from './BiomeLerper';
 import { BIOME_TRANSITION_DURATION, DAY_CYCLE_DURATION } from '../utils/constants';
 
+const OCEAN_DURATION = 120; // ocean biome: 2 minutes (shorter crossing)
+
 export class BiomeController implements Updatable {
   private currentIndex: number;
   private timer = 0;
   private transitioning = false;
   private transitionTimer = 0;
   private lerper: BiomeLerper;
-  private biomeDuration = DAY_CYCLE_DURATION; // one full day/night per biome
+  private biomeDuration = OCEAN_DURATION; // starts at ocean
 
   constructor(private eventBus: EventBus) {
     this.lerper = new BiomeLerper();
@@ -57,6 +59,7 @@ export class BiomeController implements Updatable {
         this.currentIndex = nextIndex;
         this.transitioning = false;
         this.timer = 0;
+        this.biomeDuration = BIOME_ORDER[nextIndex] === 'ocean' ? OCEAN_DURATION : DAY_CYCLE_DURATION;
         this.eventBus.emit('biome:changed', { biome: toName });
       }
     }

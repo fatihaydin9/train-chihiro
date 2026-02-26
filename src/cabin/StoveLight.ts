@@ -91,6 +91,7 @@ export class StoveLight implements Updatable {
         for (const f of this.stoveFlames) f.visible = this.stoveOn;
         this.flameMat.opacity = this.stoveOn ? 0.9 : 0;
         this.stoveLight.intensity = this.stoveOn ? 0.8 : 0;
+        eventBus.emit('stove:state', { on: this.stoveOn });
       });
 
       // Cycle headlights: off → short → long → off

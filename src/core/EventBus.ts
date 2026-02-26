@@ -15,6 +15,7 @@ export interface EventMap {
   'interaction:lantern-toggle': void;
   'train:speed-changed': { fast: boolean };
   'interaction:stove-toggle': void;
+  'stove:state': { on: boolean };
 }
 
 type Handler<T> = (data: T) => void;

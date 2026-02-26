@@ -81,6 +81,7 @@ export class WindowEffects implements Updatable {
   private targetCondensation = 0;
   private currentCondensation = 0;
   private currentBiomeName = '';
+  private stoveOn = false;
 
   constructor(private scene: THREE.Scene, eventBus: EventBus) {
     const halfW = CABIN_WIDTH / 2;
@@ -202,6 +203,11 @@ export class WindowEffects implements Updatable {
       this.targetRain = (RAIN_LEVEL[wType] ?? 0) * intensity;
       this.targetCondensation = (CONDENSATION_LEVEL[wType] ?? 0) * intensity;
     });
+
+    // Stove warmth clears condensation and frost
+    eventBus.on('stove:state', (data) => {
+      this.stoveOn = data.on;
+    });
   }
 
   private createRainPanel() {
@@ -231,13 +237,17 @@ export class WindowEffects implements Updatable {
     const condSpeed = (this.targetCondensation < this.currentCondensation ? 3.0 : 0.8) * dt;
     const rainSpeed = 0.8 * dt;
 
-    this.currentFrost += (this.targetFrost - this.currentFrost) * frostSpeed;
+    // Stove warmth suppresses frost and condensation
+    const effectiveFrost = this.stoveOn ? this.targetFrost * 0.1 : this.targetFrost;
+    const effectiveCond = this.stoveOn ? this.targetCondensation * 0.1 : this.targetCondensation;
+
+    this.currentFrost += (effectiveFrost - this.currentFrost) * frostSpeed;
     this.currentRain += (this.targetRain - this.currentRain) * rainSpeed;
-    this.currentCondensation += (this.targetCondensation - this.currentCondensation) * condSpeed;
+    this.currentCondensation += (effectiveCond - this.currentCondensation) * condSpeed;
 
     // Snap to zero when very close (prevent lingering)
-    if (this.targetFrost < 0.01 && this.currentFrost < 0.03) this.currentFrost = 0;
-    if (this.targetCondensation < 0.01 && this.currentCondensation < 0.03) this.currentCondensation = 0;
+    if (effectiveFrost < 0.01 && this.currentFrost < 0.03) this.currentFrost = 0;
+    if (effectiveCond < 0.01 && this.currentCondensation < 0.03) this.currentCondensation = 0;
 
     // Frost (full window ice)
     if (this.currentFrost > 0.01) {
