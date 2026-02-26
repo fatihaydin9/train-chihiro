@@ -9,6 +9,12 @@ export interface EventMap {
   'xr:session-ended': void;
   'grab:start': { hand: string; objectId: string };
   'grab:end': { hand: string; objectId: string };
+  'interaction:sit': { active: boolean };
+  'interaction:lie': { active: boolean };
+  'interaction:light-toggle': void;
+  'interaction:lantern-toggle': void;
+  'train:speed-changed': { fast: boolean };
+  'interaction:stove-toggle': void;
 }
 
 type Handler<T> = (data: T) => void;

@@ -7,7 +7,7 @@ import { DAY_CYCLE_DURATION } from '../utils/constants';
  * Emits 'daytime:tick' each frame with current time and whether it's daytime.
  */
 export class DayNightCycle implements Updatable {
-  private timeOfDay = 0.45; // Start at overcast midday
+  private timeOfDay = 0.32; // Start at dawn-to-day transition
 
   constructor(private eventBus: EventBus) {}
 
@@ -15,8 +15,8 @@ export class DayNightCycle implements Updatable {
     this.timeOfDay += dt / DAY_CYCLE_DURATION;
     if (this.timeOfDay >= 1) this.timeOfDay -= 1;
 
-    // Daytime roughly from 0.2 (dawn) to 0.8 (dusk)
-    const isDaytime = this.timeOfDay > 0.2 && this.timeOfDay < 0.8;
+    // Daytime from 0.20 (dawn start) to 0.80 (dusk end) — 60% of cycle
+    const isDaytime = this.timeOfDay > 0.20 && this.timeOfDay < 0.80;
 
     this.eventBus.emit('daytime:tick', {
       timeOfDay: this.timeOfDay,

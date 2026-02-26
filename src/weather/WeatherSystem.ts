@@ -9,12 +9,14 @@ export class WeatherSystem implements Updatable {
   private currentEmitter: ParticleEmitter | null = null;
   private nextEmitter: ParticleEmitter | null = null;
   private currentType: WeatherType | null = null;
-  private crossfadeProgress = 1;
   private windStrength = 0;
+  private crossfadeT = 0;
+  private isCrossfading = false;
 
   constructor(
     private scene: THREE.Scene,
     private eventBus: EventBus,
+    private camera?: THREE.Camera,
   ) {
     this.eventBus.on('biome:transition-tick', (config) => {
       this.windStrength = config.windStrength;
@@ -24,13 +26,13 @@ export class WeatherSystem implements Updatable {
         this.startCrossfade(desiredType, config.weatherIntensity);
       }
 
-      // During crossfade, blend opacities
-      if (this.currentEmitter && this.nextEmitter) {
-        const t = config.transitionProgress;
-        this.currentEmitter.setOpacity((1 - t) * config.weatherIntensity);
-        this.nextEmitter.setOpacity(t * config.weatherIntensity);
+      if (this.isCrossfading && this.currentEmitter && this.nextEmitter) {
+        // Smoothly transition between old and new weather
+        this.crossfadeT = Math.min(this.crossfadeT + 0.01, 1);
+        this.currentEmitter.setOpacity((1 - this.crossfadeT) * config.weatherIntensity);
+        this.nextEmitter.setOpacity(this.crossfadeT * config.weatherIntensity);
 
-        if (t >= 1) {
+        if (this.crossfadeT >= 1) {
           this.finishCrossfade();
         }
       } else if (this.currentEmitter) {
@@ -41,7 +43,6 @@ export class WeatherSystem implements Updatable {
 
   private startCrossfade(type: WeatherType, intensity: number): void {
     if (this.nextEmitter) {
-      // Already crossfading — finish previous
       this.finishCrossfade();
     }
 
@@ -53,13 +54,13 @@ export class WeatherSystem implements Updatable {
     this.currentType = type;
 
     if (!this.currentEmitter) {
-      // First weather — show immediately at full intensity
       emitter.setOpacity(intensity);
       this.currentEmitter = emitter;
     } else {
-      // Crossfade from current
       emitter.setOpacity(0);
       this.nextEmitter = emitter;
+      this.crossfadeT = 0;
+      this.isCrossfading = true;
     }
   }
 
@@ -70,9 +71,22 @@ export class WeatherSystem implements Updatable {
     }
     this.currentEmitter = this.nextEmitter;
     this.nextEmitter = null;
+    this.isCrossfading = false;
   }
 
   update(_dt: number, elapsed: number): void {
+    if (this.camera) {
+      const cx = this.camera.position.x;
+      const cz = this.camera.position.z;
+      if (this.currentEmitter) {
+        this.currentEmitter.points.position.x = cx;
+        this.currentEmitter.points.position.z = cz;
+      }
+      if (this.nextEmitter) {
+        this.nextEmitter.points.position.x = cx;
+        this.nextEmitter.points.position.z = cz;
+      }
+    }
     this.currentEmitter?.update(elapsed, this.windStrength);
     this.nextEmitter?.update(elapsed, this.windStrength);
   }

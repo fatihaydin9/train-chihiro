@@ -24,7 +24,7 @@ export class BiomeLerper {
       floraDistribution: snap ? from.floraDistribution : to.floraDistribution,
       distantModels: snap ? from.distantModels : to.distantModels,
       terrainAmplitude: lerp(from.terrainAmplitude, to.terrainAmplitude, s),
-      weatherType: snap ? from.weatherType : to.weatherType,
+      weatherType: t < 0.95 ? from.weatherType : to.weatherType,
       weatherIntensity: lerp(from.weatherIntensity, to.weatherIntensity, s),
       windStrength: lerp(from.windStrength, to.windStrength, s),
 

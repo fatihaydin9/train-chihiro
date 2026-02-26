@@ -78,22 +78,20 @@ export class CabinSetup {
     const winFrameMat = new THREE.MeshStandardMaterial({ color: 0x3A3A3E, roughness: 0.3, metalness: 0.6 }); // dark metal frame
     const trimMat = new THREE.MeshStandardMaterial({ color: 0x555560, roughness: 0.35, metalness: 0.5 }); // subtle metallic trim
 
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x88aacc, transparent: true, opacity: 0.15, roughness: 0.05, metalness: 0.1 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x88aacc, transparent: true, opacity: 0.15, roughness: 0.05, metalness: 0.1, depthWrite: false });
 
     const consoleMat = new THREE.MeshStandardMaterial({ color: 0x2A2A2E, roughness: 0.4, metalness: 0.5 }); // dark console
     const darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3e, roughness: 0.5, metalness: 0.5 });
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x555558, roughness: 0.5, metalness: 0.5 });
     const leverMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.6 });
     const gaugeMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.5, metalness: 0.5 });
-    const buttonRedMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.6, metalness: 0.2 });
-    const buttonGreenMat = new THREE.MeshStandardMaterial({ color: 0x33cc33, roughness: 0.6, metalness: 0.2 });
-    const buttonYellowMat = new THREE.MeshStandardMaterial({ color: 0xcccc33, roughness: 0.6, metalness: 0.2 });
-    const screenMat = new THREE.MeshBasicMaterial({ color: 0x22aaaa });
+    const buttonRedMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.6, metalness: 0.2, emissive: 0xcc3333, emissiveIntensity: 0.15 });
+    const buttonGreenMat = new THREE.MeshStandardMaterial({ color: 0x33cc33, roughness: 0.6, metalness: 0.2, emissive: 0x33cc33, emissiveIntensity: 0.15 });
+    const buttonYellowMat = new THREE.MeshStandardMaterial({ color: 0xcccc33, roughness: 0.6, metalness: 0.2, emissive: 0xcccc33, emissiveIntensity: 0.15 });
+    const screenMat = new THREE.MeshBasicMaterial({ color: 0x1a1410 });
 
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x333338, roughness: 0.6, metalness: 0.2 }); // dark charcoal
     const chromeMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.15, metalness: 0.8 }); // chrome accents
-
-    const lightPanelMat = new THREE.MeshBasicMaterial({ color: 0xffeecc });
 
     // Living area materials
     const bedFrameMat = new THREE.MeshStandardMaterial({ color: 0xE8E8E5, roughness: 0.5, metalness: 0.15 }); // white frame
@@ -579,9 +577,7 @@ export class CabinSetup {
     lanternTop.position.set(nsX, lanternBaseY + 0.145, nsZ);
     this.group.add(lanternTop);
 
-    const lanternLight = new THREE.PointLight(0xFFCC66, 1.0, 3, 2);
-    lanternLight.position.set(nsX, lanternBaseY + 0.08, nsZ);
-    this.group.add(lanternLight);
+    // Lantern PointLight managed by StoveLight (toggleable)
 
     // ====================================================================
     // 10. RUG (living area center)
@@ -602,30 +598,28 @@ export class CabinSetup {
     this.group.add(rugBorder);
 
     // ====================================================================
-    // 14. OVERHEAD LIGHTS
+    // 14. TRAIN HEADLIGHTS (front of cabin, -Z)
     // ====================================================================
-    const lightY = floorY + CABIN_HEIGHT - wt - 0.02;
-
-    const drivingLight = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.03, 0.2),
-      lightPanelMat,
-    );
-    drivingLight.position.set(0, lightY, -halfD / 2 - 0.5);
-    this.group.add(drivingLight);
-
-    const livingLight = new THREE.Mesh(
-      new THREE.BoxGeometry(0.35, 0.03, 0.2),
-      lightPanelMat,
-    );
-    livingLight.position.set(0.2, lightY, 1.4);
-    this.group.add(livingLight);
-
-    const kitchenLight = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.03, 0.15),
-      lightPanelMat,
-    );
-    kitchenLight.position.set(kitchenX + 0.15, lightY, kitMidZ);
-    this.group.add(kitchenLight);
+    const headlightMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.6 });
+    const headlightLensMat = new THREE.MeshBasicMaterial({ color: 0xFFEECC });
+    for (const side of [-1, 1]) {
+      // Housing
+      const housing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.12, 0.08, 12),
+        headlightMat,
+      );
+      housing.rotation.x = Math.PI / 2;
+      housing.position.set(side * 0.55, floorY + 0.3, -halfD - 0.04);
+      this.group.add(housing);
+      // Lens
+      const lens = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, 0.01, 12),
+        headlightLensMat,
+      );
+      lens.rotation.x = Math.PI / 2;
+      lens.position.set(side * 0.55, floorY + 0.3, -halfD - 0.09);
+      this.group.add(lens);
+    }
 
     // ====================================================================
     // 15. UNDERCARRIAGE (unchanged)

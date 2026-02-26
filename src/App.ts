@@ -22,10 +22,12 @@ import { GrabSystem } from './interaction/GrabSystem';
 import { ControllerModel } from './interaction/ControllerModel';
 import { AudioSystem } from './audio/AudioSystem';
 import { AudioCrossfader } from './audio/AudioCrossfader';
+import { ProceduralSounds } from './audio/ProceduralSounds';
 import { DistantScenery } from './treadmill/DistantScenery';
 import { BirdFlock } from './environment/BirdFlock';
 import { WaterSurface } from './environment/WaterSurface';
 import { DesktopCameraController } from './interaction/DesktopCameraController';
+import { CabinInteraction } from './cabin/CabinInteraction';
 import { CABIN_FLOOR_Y, CABIN_WIDTH, CABIN_DEPTH } from './utils/constants';
 
 export class App {
@@ -75,12 +77,12 @@ export class App {
     const birds = new BirdFlock(scene);
     this.loop.addSystem(birds);
 
-    // --- Water Surface (deep_ocean animated plane) ---
+    // --- Water Surface (ocean biome animated plane) ---
     const waterSurface = new WaterSurface(scene, this.eventBus);
     this.loop.addSystem(waterSurface);
 
     // --- Weather ---
-    const weather = new WeatherSystem(scene, this.eventBus);
+    const weather = new WeatherSystem(scene, this.eventBus, camera);
     this.loop.addSystem(weather);
 
     // --- Train Cabin (windshield faces -Z, travel direction) ---
@@ -91,7 +93,7 @@ export class App {
     const trainBody = new TrainBodyAhead();
     scene.add(trainBody.group);
 
-    const stoveLight = new StoveLight(scene);
+    const stoveLight = new StoveLight(scene, this.eventBus);
     this.loop.addSystem(stoveLight);
 
     // --- Window Effects (frost, fog, rain drops on glass) ---
@@ -103,8 +105,12 @@ export class App {
     this.loop.addSystem(trainMotion);
 
     // --- Desktop Camera Controller (non-VR mouse+keyboard) ---
-    const desktopCam = new DesktopCameraController(camera, renderer);
+    const desktopCam = new DesktopCameraController(camera, renderer, this.eventBus);
     this.loop.addSystem(desktopCam);
+
+    // --- Cabin Interactions (sit, lie, light toggle + hover tooltips) ---
+    const cabinInteraction = new CabinInteraction(camera, this.eventBus);
+    this.loop.addSystem(cabinInteraction);
 
     // --- Interactable objects (positioned for new 3×3×6m cabin) ---
     const floorTop = CABIN_FLOOR_Y + 0.06; // floor surface
@@ -147,6 +153,9 @@ export class App {
     const audioSystem = new AudioSystem(camera);
     const crossfader = new AudioCrossfader(audioSystem, this.resources, this.eventBus);
     this.loop.addSystem(crossfader);
+
+    const proceduralSounds = new ProceduralSounds(audioSystem, this.eventBus);
+    this.loop.addSystem(proceduralSounds);
 
     // Resume audio context on user gesture
     const resumeAudio = () => {

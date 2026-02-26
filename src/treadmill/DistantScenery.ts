@@ -23,6 +23,7 @@ export class DistantScenery implements Updatable {
   private midLayer: SceneryLayer;
   private farLayer: SceneryLayer;
   private currentDistantModels: string[] = [];
+  private speed = WORLD_SPEED * 0.35;
 
   constructor(
     private scene: THREE.Scene,
@@ -49,10 +50,14 @@ export class DistantScenery implements Updatable {
         this.currentDistantModels = models;
       }
     });
+
+    this.eventBus.on('train:speed-changed', ({ fast }) => {
+      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.35;
+    });
   }
 
   update(dt: number, _elapsed: number): void {
-    const moveAmount = WORLD_SPEED * dt;
+    const moveAmount = this.speed * dt;
 
     // Move layers at parallax-reduced speed
     this.midLayer.group.position.z += moveAmount * this.midLayer.parallax;
@@ -131,14 +136,14 @@ export class DistantScenery implements Updatable {
       const model = this.registry.getModel(typeName);
       if (!model) continue;
 
-      const count = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('church')
+      const count = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('mosque')
         ? 3  // fewer structures
         : 5; // more trees
 
       const batch = model.createBatch(count);
       const dummy = new THREE.Object3D();
 
-      const isStructure = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('church') || typeName.includes('barn') || typeName.includes('windmill') || typeName.includes('igloo');
+      const isStructure = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('mosque') || typeName.includes('barn') || typeName.includes('windmill') || typeName.includes('igloo');
 
       for (let i = 0; i < count; i++) {
         const side = rng() > 0.5 ? 1 : -1;

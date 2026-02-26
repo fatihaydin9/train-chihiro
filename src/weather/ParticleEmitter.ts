@@ -26,15 +26,22 @@ const vertexShader = /* glsl */ `
     // Animate: fall down (or rise up if uRise == 1), loop, drift horizontally
     float t = mod(aOffset + uTime * uSpeed / uHeight, 1.0);
     pos.y = mix(uHeight * (1.0 - t), uHeight * t, uRise) - 1.5;
-    pos.x += sin(uTime * 0.5 + aOffset * 6.28) * uDrift + uWind * uTime;
-    pos.z += cos(uTime * 0.3 + aOffset * 3.14) * uDrift * 0.5;
+
+    // Rain (speed>5): diagonal fall driven by wind+drift; others: gentle oscillation
+    float isRain = step(5.0, uSpeed);
+    // t goes 0→1 as particle falls — use it for consistent diagonal displacement
+    float diagX = isRain * uDrift * t * 8.0;
+    float oscX = sin(uTime * 0.5 + aOffset * 6.28) * uDrift * (1.0 - isRain * 0.7);
+    pos.x += oscX + diagX;
+    pos.z += cos(uTime * 0.3 + aOffset * 3.14) * uDrift * 0.3;
 
     vAlpha = smoothstep(0.0, 0.1, t) * smoothstep(1.0, 0.9, t);
 
-    // Hide particles inside the train cabin
-    if (pos.x > uCabinMin.x && pos.x < uCabinMax.x &&
-        pos.y > uCabinMin.y && pos.y < uCabinMax.y &&
-        pos.z > uCabinMin.z && pos.z < uCabinMax.z) {
+    // Hide particles inside the train cabin (convert to world space)
+    vec3 worldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+    if (worldPos.x > uCabinMin.x && worldPos.x < uCabinMax.x &&
+        worldPos.y > uCabinMin.y && worldPos.y < uCabinMax.y &&
+        worldPos.z > uCabinMin.z && worldPos.z < uCabinMax.z) {
       vAlpha = 0.0;
     }
 
@@ -42,7 +49,8 @@ const vertexShader = /* glsl */ `
     vIsStreak = uSpeed > 5.0 ? 1.0 : 0.0;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = INJECT_SIZE * (300.0 / -mvPosition.z);
+    float rawSize = INJECT_SIZE * (300.0 / -mvPosition.z);
+    gl_PointSize = clamp(rawSize, 2.0, 20.0);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -58,9 +66,8 @@ const fragmentShader = /* glsl */ `
     vec2 uv = gl_PointCoord - vec2(0.5);
 
     if (vIsStreak > 0.5) {
-      // Minecraft-style diagonal rain streak
-      // Rotate UV 20 degrees for diagonal effect
-      float angle = 0.35;
+      // Diagonal rain streak (~30 degrees)
+      float angle = 0.5;
       float ca = cos(angle);
       float sa = sin(angle);
       vec2 ruv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
@@ -86,8 +93,10 @@ const fragmentShader = /* glsl */ `
 export class ParticleEmitter {
   readonly points: THREE.Points;
   private material: THREE.ShaderMaterial;
+  private baseOpacity: number;
 
   constructor(config: ParticleConfig) {
+    this.baseOpacity = config.opacity;
     const count = config.count;
     const positions = new Float32Array(count * 3);
     const offsets = new Float32Array(count);
@@ -109,17 +118,16 @@ export class ParticleEmitter {
       config.size.toFixed(3),
     );
 
-    // Cabin bounding box (with a small margin)
-    const margin = 0.2;
+    // Cabin bounding box — small inward margin so particles just outside walls are visible
     const cabinMin = new THREE.Vector3(
-      -CABIN_WIDTH / 2 - margin,
-      CABIN_FLOOR_Y - margin,
-      -CABIN_DEPTH / 2 - margin,
+      -CABIN_WIDTH / 2 + 0.15,
+      CABIN_FLOOR_Y,
+      -CABIN_DEPTH / 2 + 0.15,
     );
     const cabinMax = new THREE.Vector3(
-      CABIN_WIDTH / 2 + margin,
-      CABIN_FLOOR_Y + CABIN_HEIGHT + margin,
-      CABIN_DEPTH / 2 + margin,
+      CABIN_WIDTH / 2 - 0.15,
+      CABIN_FLOOR_Y + CABIN_HEIGHT,
+      CABIN_DEPTH / 2 - 0.15,
     );
 
     this.material = new THREE.ShaderMaterial({
@@ -140,7 +148,7 @@ export class ParticleEmitter {
       },
       transparent: true,
       depthWrite: false,
-      blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending,
     });
 
     this.points = new THREE.Points(geometry, this.material);
@@ -152,8 +160,9 @@ export class ParticleEmitter {
     this.material.uniforms.uWind.value = wind;
   }
 
-  setOpacity(opacity: number): void {
-    this.material.uniforms.uOpacity.value = opacity;
+  /** opacity is a 0–1 scale multiplied with the config's base opacity */
+  setOpacity(scale: number): void {
+    this.material.uniforms.uOpacity.value = this.baseOpacity * scale;
   }
 
   dispose(): void {

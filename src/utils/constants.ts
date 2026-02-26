@@ -2,7 +2,7 @@
 export const CHUNK_DEPTH = 40; // meters along Z
 export const CHUNK_WIDTH = 80; // meters along X
 export const CHUNK_COUNT = 8;
-export const WORLD_SPEED = 8; // m/s along +Z toward player
+export const WORLD_SPEED = 18; // m/s along +Z toward player
 export const TRACK_GAUGE = 1.435; // standard gauge in meters
 
 // Terrain
@@ -30,9 +30,9 @@ export const FLORA_NEAR_MAX = 15;
 export const FLORA_FAR_MIN = 15;
 export const FLORA_FAR_MAX = 38;
 
-// Biome timing — faster transitions for variety
-export const BIOME_DURATION = 40; // seconds per biome
-export const BIOME_TRANSITION_DURATION = 12; // seconds to crossfade
+// Biome timing
+export const BIOME_DURATION = 180; // seconds per biome (~3 min)
+export const BIOME_TRANSITION_DURATION = 15; // seconds to crossfade
 
 // Flora density (legacy per-type counts, used by band system)
 export const TREES_PER_CHUNK = 12;
@@ -58,5 +58,5 @@ export const TRAIN_CAR_DEPTH = 8.0;
 export const RIVER_PROBABILITY = 0.15;
 export const BRIDGE_HEIGHT = 3.0;
 
-// Day/night cycle — faster for more dynamic atmosphere
-export const DAY_CYCLE_DURATION = 540; // seconds for full cycle (3x slower)
+// Day/night cycle
+export const DAY_CYCLE_DURATION = 480; // seconds for full cycle (8 min: 4 day + 4 night)

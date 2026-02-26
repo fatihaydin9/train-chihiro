@@ -56,7 +56,7 @@ export interface BiomeConfig {
   dayNightInfluence: number;
 }
 
-export type WeatherType = 'snow' | 'rain' | 'leaves' | 'smog' | 'ash' | 'blizzard' | 'drizzle' | 'petals' | 'hail' | 'storm' | 'frost' | 'bubbles' | 'none';
+export type WeatherType = 'snow' | 'rain' | 'leaves' | 'smog' | 'ash' | 'blizzard' | 'drizzle' | 'petals' | 'hail' | 'storm' | 'frost' | 'bubbles' | 'sandstorm' | 'none';
 
 export interface BlendedBiomeConfig extends BiomeConfig {
   transitionProgress: number; // 0 = fully "from", 1 = fully "to"

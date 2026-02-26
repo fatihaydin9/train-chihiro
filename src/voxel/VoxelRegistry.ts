@@ -363,21 +363,28 @@ export class VoxelRegistry {
       ],
     });
 
-    // Church — uses smooth cone steeple instead of box stack
+    // Mosque — dome + minaret with crescent
     this.registerSmooth({
-      name: 'church',
+      name: 'mosque',
       parts: [
-        // Main body (approximated with wide cylinder)
-        { type: 'cylinder', x: 0, y: 0.6, z: 0, params: [0.55, 1.1, 4], color: 0xddccbb, scaleX: 1.0, scaleZ: 1.4 },
-        // Steeple base
-        { type: 'cylinder', x: 0, y: 1.5, z: 0.5, params: [0.25, 0.8, 4], color: 0xccbbaa },
-        // Steeple — cone instead of box stack
-        { type: 'cone', x: 0, y: 2.5, z: 0.5, params: [0, 0.25, 0.9, 8], color: 0xbbaa99 },
-        // Cross (thin cylinder)
-        { type: 'cylinder', x: 0, y: 3.05, z: 0.5, params: [0.025, 0.25, 4], color: 0xddaa22 },
-        { type: 'cylinder', x: 0, y: 2.95, z: 0.5, params: [0.025, 0.05, 4], color: 0xddaa22, scaleX: 3.0 },
-        // Roof
-        { type: 'cone', x: 0, y: 1.35, z: -0.1, params: [0, 0.6, 0.25, 4], color: 0x664433, scaleX: 1.0, scaleZ: 1.2 },
+        // Main body (wide rectangular base)
+        { type: 'cylinder', x: 0, y: 0.6, z: 0, params: [0.6, 1.2, 4], color: 0xddccbb, scaleX: 1.2, scaleZ: 1.4 },
+        // Main dome
+        { type: 'cone', x: 0, y: 1.6, z: 0, params: [0, 0.55, 0.8, 12], color: 0x888888 },
+        // Dome tip (small sphere-like)
+        { type: 'cone', x: 0, y: 2.1, z: 0, params: [0, 0.08, 0.15, 8], color: 0xddaa22 },
+        // Crescent on dome (thin torus approximation — small tilted ring)
+        { type: 'torus', x: 0, y: 2.25, z: 0, params: [0.06, 0.012, 8, 16], color: 0xddaa22 },
+        // Minaret tower (tall thin cylinder)
+        { type: 'cylinder', x: 0.5, y: 1.2, z: 0.5, params: [0.12, 2.4, 8], color: 0xccbbaa },
+        // Minaret balcony (wider ring)
+        { type: 'cylinder', x: 0.5, y: 2.0, z: 0.5, params: [0.18, 0.08, 8], color: 0xbbaa99 },
+        // Minaret cone top
+        { type: 'cone', x: 0.5, y: 2.65, z: 0.5, params: [0, 0.12, 0.5, 8], color: 0x888888 },
+        // Minaret crescent
+        { type: 'torus', x: 0.5, y: 2.95, z: 0.5, params: [0.04, 0.01, 8, 16], color: 0xddaa22 },
+        // Entrance arch
+        { type: 'cylinder', x: 0, y: 0.5, z: -0.65, params: [0.2, 0.5, 8], color: 0xccbbaa, scaleX: 0.6 },
       ],
     });
 
@@ -770,9 +777,8 @@ export class VoxelRegistry {
         { x: 0, y: 1.78, z: 0, w: 0.6, h: 0.08, d: 0.8, color: 0x553322 },
         // Barn door
         { x: 0, y: 0.4, z: 0.56, w: 0.5, h: 0.7, d: 0.03, color: 0x553322 },
-        // Cross on door
-        { x: 0, y: 0.4, z: 0.57, w: 0.4, h: 0.04, d: 0.01, color: 0xddddcc },
-        { x: 0, y: 0.4, z: 0.57, w: 0.04, h: 0.5, d: 0.01, color: 0xddddcc },
+        // Door handle
+        { x: 0.15, y: 0.4, z: 0.57, w: 0.04, h: 0.08, d: 0.01, color: 0xddddcc },
         // Hay loft window
         { x: 0, y: 1.1, z: 0.56, w: 0.2, h: 0.15, d: 0.02, color: 0x332211 },
       ],
@@ -1160,7 +1166,7 @@ export class VoxelRegistry {
     });
 
     // =====================================================
-    // === UNDERWATER MODELS — deep_ocean biome ===
+    // === OCEAN / WATER MODELS — ocean biome ===
     // =====================================================
     this.registerSmooth({
       name: 'coral_branch',
@@ -1355,6 +1361,232 @@ export class VoxelRegistry {
         { x: 0.3, y: 0.05, z: -0.1, w: 0.12, h: 0.1, d: 0.1, color: 0x666655 },
         { x: -0.25, y: 0.04, z: 0.2, w: 0.1, h: 0.08, d: 0.08, color: 0x777766 },
         { x: 0.1, y: 0.03, z: 0.25, w: 0.08, h: 0.06, d: 0.08, color: 0x555544 },
+      ],
+    });
+
+    // =====================================================
+    // === SAKURA / JAPANESE BIOME MODELS ===
+    // =====================================================
+
+    // Sakura tree — twisted trunk with full pink canopy
+    this.registerSmooth({
+      name: 'sakura_tree',
+      parts: [
+        // Twisted trunk
+        { type: 'cylinder', x: 0, y: 0.5, z: 0, params: [0.06, 1.0, 8], color: 0x5a3825 },
+        { type: 'cylinder', x: 0.05, y: 0.9, z: 0.03, params: [0.05, 0.4, 6], color: 0x5a3825, scaleX: 0.8 },
+        // Main blossom clusters — soft pink icosahedrons
+        { type: 'icosahedron', x: 0, y: 1.4, z: 0, params: [0.5, 1], color: 0xffb8d0 },
+        { type: 'icosahedron', x: 0.25, y: 1.6, z: 0.15, params: [0.4, 1], color: 0xffa0c0 },
+        { type: 'icosahedron', x: -0.2, y: 1.7, z: -0.1, params: [0.35, 1], color: 0xffc8dc },
+        { type: 'icosahedron', x: 0.1, y: 1.9, z: 0.05, params: [0.25, 1], color: 0xffd4e6 },
+        { type: 'icosahedron', x: -0.15, y: 1.3, z: 0.2, params: [0.3, 1], color: 0xffaabb },
+      ],
+    });
+
+    // Large sakura tree — majestic spreading canopy
+    this.registerSmooth({
+      name: 'sakura_tree_large',
+      parts: [
+        // Thick trunk
+        { type: 'cylinder', x: 0, y: 0.7, z: 0, params: [0.1, 1.4, 8], color: 0x4a2818 },
+        // Branch hint
+        { type: 'cylinder', x: 0.15, y: 1.2, z: 0.1, params: [0.04, 0.6, 6], color: 0x5a3825, scaleX: 0.6 },
+        { type: 'cylinder', x: -0.12, y: 1.1, z: -0.08, params: [0.04, 0.5, 6], color: 0x5a3825, scaleX: 0.6 },
+        // Massive blossom canopy
+        { type: 'icosahedron', x: 0, y: 1.8, z: 0, params: [0.7, 1], color: 0xffb0c8 },
+        { type: 'icosahedron', x: 0.35, y: 2.0, z: 0.2, params: [0.55, 1], color: 0xff99b8 },
+        { type: 'icosahedron', x: -0.3, y: 2.1, z: -0.15, params: [0.5, 1], color: 0xffc0d8 },
+        { type: 'icosahedron', x: 0.15, y: 2.4, z: 0, params: [0.35, 1], color: 0xffd8e8 },
+        { type: 'icosahedron', x: -0.2, y: 1.6, z: 0.3, params: [0.45, 1], color: 0xffaacc },
+        { type: 'icosahedron', x: 0.3, y: 1.5, z: -0.25, params: [0.4, 1], color: 0xffbbdd },
+      ],
+    });
+
+    // Torii gate — traditional red gate
+    this.registerSmooth({
+      name: 'torii_gate',
+      parts: [
+        // Two vertical pillars
+        { type: 'cylinder', x: -0.4, y: 0.8, z: 0, params: [0.06, 1.6, 8], color: 0xcc2222 },
+        { type: 'cylinder', x: 0.4, y: 0.8, z: 0, params: [0.06, 1.6, 8], color: 0xcc2222 },
+        // Top beam (kasagi) — slightly curved
+        { type: 'cylinder', x: 0, y: 1.65, z: 0, params: [0.04, 1.1, 4], color: 0xbb1111, scaleX: 0.3, scaleZ: 10.0 },
+        // Lower beam (nuki)
+        { type: 'cylinder', x: 0, y: 1.35, z: 0, params: [0.03, 0.8, 4], color: 0xcc2222, scaleX: 0.3, scaleZ: 8.0 },
+      ],
+    });
+
+    // Stone lantern (ishidoro) — Japanese garden light
+    this.registerSmooth({
+      name: 'stone_lantern',
+      parts: [
+        // Base
+        { type: 'cylinder', x: 0, y: 0.05, z: 0, params: [0.12, 0.1, 6], color: 0x888880 },
+        // Shaft
+        { type: 'cylinder', x: 0, y: 0.35, z: 0, params: [0.05, 0.5, 6], color: 0x999990 },
+        // Light box
+        { type: 'cylinder', x: 0, y: 0.65, z: 0, params: [0.1, 0.12, 4], color: 0xaaaaaa },
+        // Roof cap
+        { type: 'cone', x: 0, y: 0.78, z: 0, params: [0, 0.14, 0.15, 4], color: 0x777770 },
+      ],
+    });
+
+    // Bamboo cluster
+    this.registerSmooth({
+      name: 'bamboo_cluster',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.8, z: 0, params: [0.03, 1.6, 6], color: 0x558833 },
+        { type: 'cylinder', x: 0.1, y: 0.7, z: 0.08, params: [0.025, 1.4, 6], color: 0x669944 },
+        { type: 'cylinder', x: -0.08, y: 0.65, z: 0.05, params: [0.03, 1.3, 6], color: 0x4a7728 },
+        { type: 'cylinder', x: 0.05, y: 0.9, z: -0.07, params: [0.025, 1.8, 6], color: 0x558833 },
+        // Leaf tufts at top
+        { type: 'icosahedron', x: 0, y: 1.6, z: 0, params: [0.15, 0], color: 0x447722 },
+        { type: 'icosahedron', x: 0.1, y: 1.4, z: 0.08, params: [0.12, 0], color: 0x558833 },
+        { type: 'icosahedron', x: 0.05, y: 1.8, z: -0.07, params: [0.13, 0], color: 0x4a7728 },
+      ],
+    });
+
+    // Zen rock garden stone
+    this.register({
+      name: 'zen_rock',
+      cubes: [
+        { x: 0, y: 0.1, z: 0, w: 0.3, h: 0.2, d: 0.25, color: 0x707068 },
+        { x: 0.05, y: 0.2, z: 0.02, w: 0.2, h: 0.12, d: 0.18, color: 0x7a7a72 },
+      ],
+    });
+
+    // Wooden bridge (small)
+    this.register({
+      name: 'wooden_bridge',
+      cubes: [
+        // Deck
+        { x: 0, y: 0.3, z: 0, w: 0.6, h: 0.04, d: 0.3, color: 0x7a5c3a },
+        // Rails
+        { x: -0.28, y: 0.4, z: 0, w: 0.04, h: 0.15, d: 0.3, color: 0x6b4f30 },
+        { x: 0.28, y: 0.4, z: 0, w: 0.04, h: 0.15, d: 0.3, color: 0x6b4f30 },
+        // Supports
+        { x: -0.2, y: 0.15, z: -0.12, w: 0.04, h: 0.3, d: 0.04, color: 0x6b4f30 },
+        { x: 0.2, y: 0.15, z: -0.12, w: 0.04, h: 0.3, d: 0.04, color: 0x6b4f30 },
+        { x: -0.2, y: 0.15, z: 0.12, w: 0.04, h: 0.3, d: 0.04, color: 0x6b4f30 },
+        { x: 0.2, y: 0.15, z: 0.12, w: 0.04, h: 0.3, d: 0.04, color: 0x6b4f30 },
+      ],
+    });
+
+    // =====================================================
+    // === SWAMP BIOME MODELS ===
+    // =====================================================
+
+    // Swamp tree — gnarly trunk with hanging moss
+    this.registerSmooth({
+      name: 'swamp_tree',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.6, z: 0, params: [0.08, 1.2, 6], color: 0x3a3020 },
+        { type: 'cylinder', x: 0.08, y: 1.0, z: 0.05, params: [0.04, 0.6, 6], color: 0x3a3020, scaleX: 0.7 },
+        // Sparse dark canopy
+        { type: 'icosahedron', x: 0, y: 1.4, z: 0, params: [0.4, 1], color: 0x2a4a1a },
+        { type: 'icosahedron', x: 0.2, y: 1.5, z: 0.1, params: [0.3, 1], color: 0x1e3a12 },
+        // Hanging moss (elongated cones pointing down)
+        { type: 'cone', x: 0.15, y: 1.0, z: 0.15, params: [0.08, 0.4, 4], color: 0x556633, scaleY: -1 },
+        { type: 'cone', x: -0.1, y: 1.05, z: -0.1, params: [0.06, 0.35, 4], color: 0x667744, scaleY: -1 },
+        { type: 'cone', x: 0.2, y: 1.1, z: -0.05, params: [0.07, 0.3, 4], color: 0x556633, scaleY: -1 },
+      ],
+    });
+
+    // Swamp log
+    this.register({
+      name: 'swamp_log',
+      cubes: [
+        { x: 0, y: 0.06, z: 0, w: 0.8, h: 0.12, d: 0.12, color: 0x3a3020 },
+        { x: 0.1, y: 0.04, z: 0.05, w: 0.15, h: 0.06, d: 0.15, color: 0x445522 },
+      ],
+    });
+
+    // Swamp mushroom
+    this.registerSmooth({
+      name: 'swamp_mushroom_large',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.15, z: 0, params: [0.04, 0.3, 6], color: 0x8a7755 },
+        { type: 'cone', x: 0, y: 0.35, z: 0, params: [0.2, 0.05, 0.12, 8], color: 0x884422, scaleY: 0.5 },
+      ],
+    });
+
+    // =====================================================
+    // === LAVENDER / MEADOW MODELS ===
+    // =====================================================
+
+    // Lavender bush
+    this.register({
+      name: 'lavender_bush',
+      cubes: [
+        // Green base
+        { x: 0, y: 0.08, z: 0, w: 0.2, h: 0.12, d: 0.2, color: 0x556633 },
+        // Purple flower spikes
+        { x: -0.05, y: 0.2, z: 0, w: 0.04, h: 0.15, d: 0.04, color: 0x8855aa },
+        { x: 0.05, y: 0.22, z: 0.04, w: 0.04, h: 0.18, d: 0.04, color: 0x9966bb },
+        { x: 0, y: 0.18, z: -0.05, w: 0.04, h: 0.13, d: 0.04, color: 0x7744aa },
+        { x: 0.08, y: 0.2, z: -0.03, w: 0.04, h: 0.16, d: 0.04, color: 0x8855aa },
+      ],
+    });
+
+    // Sunflower
+    this.registerSmooth({
+      name: 'sunflower',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.4, z: 0, params: [0.02, 0.8, 6], color: 0x448822 },
+        { type: 'cylinder', x: 0, y: 0.85, z: 0, params: [0.1, 0.04, 8], color: 0xffcc00 },
+        { type: 'cylinder', x: 0, y: 0.85, z: 0, params: [0.05, 0.05, 8], color: 0x663300 },
+      ],
+    });
+
+    // Old stone wall
+    this.register({
+      name: 'stone_wall_ruin',
+      cubes: [
+        { x: 0, y: 0.25, z: 0, w: 0.8, h: 0.5, d: 0.12, color: 0x888877 },
+        { x: -0.25, y: 0.55, z: 0, w: 0.3, h: 0.15, d: 0.12, color: 0x999988 },
+        { x: 0.15, y: 0.4, z: 0, w: 0.15, h: 0.08, d: 0.12, color: 0x777766 },
+      ],
+    });
+
+    // =====================================================
+    // === MOUNTAIN PASS MODELS ===
+    // =====================================================
+
+    // Mountain pine (short, wind-bent)
+    this.registerSmooth({
+      name: 'mountain_pine',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.4, z: 0, params: [0.05, 0.8, 6], color: 0x4a3520 },
+        { type: 'cone', x: 0.05, y: 1.0, z: 0, params: [0, 0.35, 0.7, 8], color: 0x2a5525 },
+        { type: 'cone', x: 0.03, y: 1.3, z: 0, params: [0, 0.25, 0.5, 8], color: 0x2a5525 },
+      ],
+    });
+
+    // Prayer flags (colorful strips between posts)
+    this.register({
+      name: 'prayer_flags',
+      cubes: [
+        // Two posts
+        { x: -0.3, y: 0.3, z: 0, w: 0.03, h: 0.6, d: 0.03, color: 0x6b4f30 },
+        { x: 0.3, y: 0.3, z: 0, w: 0.03, h: 0.6, d: 0.03, color: 0x6b4f30 },
+        // Flags (small colored blocks strung between)
+        { x: -0.15, y: 0.55, z: 0, w: 0.1, h: 0.06, d: 0.01, color: 0xcc3333 },
+        { x: 0, y: 0.54, z: 0, w: 0.1, h: 0.06, d: 0.01, color: 0xffcc00 },
+        { x: 0.15, y: 0.56, z: 0, w: 0.1, h: 0.06, d: 0.01, color: 0x3366cc },
+        { x: -0.08, y: 0.53, z: 0, w: 0.08, h: 0.05, d: 0.01, color: 0x33aa55 },
+        { x: 0.08, y: 0.55, z: 0, w: 0.08, h: 0.05, d: 0.01, color: 0xffffff },
+      ],
+    });
+
+    // Mountain cairn (stacked stones)
+    this.registerSmooth({
+      name: 'mountain_cairn',
+      parts: [
+        { type: 'cylinder', x: 0, y: 0.06, z: 0, params: [0.15, 0.12, 6], color: 0x777770 },
+        { type: 'cylinder', x: 0, y: 0.16, z: 0, params: [0.11, 0.08, 6], color: 0x888880 },
+        { type: 'cylinder', x: 0, y: 0.24, z: 0, params: [0.08, 0.06, 6], color: 0x999990 },
+        { type: 'cylinder', x: 0, y: 0.3, z: 0, params: [0.05, 0.05, 6], color: 0xaaaaaa },
       ],
     });
   }

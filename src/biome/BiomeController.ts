@@ -2,33 +2,37 @@ import type { Updatable } from '../core/GameLoop';
 import type { EventBus } from '../core/EventBus';
 import { BIOME_DEFINITIONS, BIOME_ORDER } from './BiomeData';
 import { BiomeLerper } from './BiomeLerper';
-import { BIOME_DURATION, BIOME_TRANSITION_DURATION } from '../utils/constants';
+import { BIOME_TRANSITION_DURATION, DAY_CYCLE_DURATION } from '../utils/constants';
 
 export class BiomeController implements Updatable {
-  private currentIndex = 0;
+  private currentIndex: number;
   private timer = 0;
   private transitioning = false;
   private transitionTimer = 0;
   private lerper: BiomeLerper;
+  private biomeDuration = DAY_CYCLE_DURATION; // one full day/night per biome
 
   constructor(private eventBus: EventBus) {
     this.lerper = new BiomeLerper();
+    // Start at a random biome
+    this.currentIndex = Math.floor(Math.random() * BIOME_ORDER.length);
   }
 
   update(dt: number, _elapsed: number): void {
     this.timer += dt;
 
+    if (!this.transitioning && this.timer >= this.biomeDuration) {
+      this.transitioning = true;
+      this.transitionTimer = 0;
+    }
+
     if (!this.transitioning) {
-      if (this.timer >= BIOME_DURATION) {
-        this.transitioning = true;
-        this.transitionTimer = 0;
-      }
       // Emit current biome at progress 1 (fully settled)
       const current = BIOME_ORDER[this.currentIndex];
       const config = BIOME_DEFINITIONS[current];
       this.eventBus.emit('biome:transition-tick', {
         ...config,
-        transitionProgress: this.transitioning ? 0 : 1,
+        transitionProgress: 1,
         fromBiome: current,
         toBiome: current,
       });

@@ -45,8 +45,8 @@ export class FogSystem implements Updatable {
       return;
     }
 
-    // Base density from biome fogFar
-    const baseDensity = 2.5 / this.biomeFogFar;
+    // Base density from biome fogFar (softened)
+    const baseDensity = 1.8 / this.biomeFogFar;
 
     // Night: pull fog darker, denser
     const sinVal = Math.sin(this.timeOfDay * Math.PI * 2 - Math.PI / 2);

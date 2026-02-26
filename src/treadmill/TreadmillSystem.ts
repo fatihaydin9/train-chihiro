@@ -9,6 +9,7 @@ import { CHUNK_DEPTH, CHUNK_COUNT, WORLD_SPEED } from '../utils/constants';
 export class TreadmillSystem implements Updatable {
   private pool: ChunkPool;
   private currentBiome: BlendedBiomeConfig | null = null;
+  private speed = WORLD_SPEED * 0.35;
 
   constructor(
     private scene: THREE.Scene,
@@ -29,16 +30,21 @@ export class TreadmillSystem implements Updatable {
     this.eventBus.on('biome:transition-tick', (config) => {
       this.currentBiome = config;
     });
+
+    // Speed toggle
+    this.eventBus.on('train:speed-changed', ({ fast }) => {
+      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.35;
+    });
   }
 
   update(dt: number, _elapsed: number): void {
-    const moveAmount = WORLD_SPEED * dt;
+    const moveAmount = this.speed * dt;
 
     for (const chunk of this.pool.chunks) {
       chunk.group.position.z += moveAmount;
 
-      // If chunk has passed the player, recycle it to the back
-      if (chunk.group.position.z > CHUNK_DEPTH) {
+      // If chunk has passed the player + buffer, recycle it to the back
+      if (chunk.group.position.z > CHUNK_DEPTH * 2.5) {
         this.recycleChunk(chunk);
       }
     }
