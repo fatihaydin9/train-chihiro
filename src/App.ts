@@ -26,6 +26,7 @@ import { ProceduralSounds } from './audio/ProceduralSounds';
 import { DistantScenery } from './treadmill/DistantScenery';
 import { BirdFlock } from './environment/BirdFlock';
 import { WaterSurface } from './environment/WaterSurface';
+import { WaterWake } from './environment/WaterWake';
 import { DesktopCameraController } from './interaction/DesktopCameraController';
 import { CabinInteraction } from './cabin/CabinInteraction';
 import { CABIN_FLOOR_Y, CABIN_WIDTH, CABIN_DEPTH } from './utils/constants';
@@ -79,7 +80,12 @@ export class App {
 
     // --- Water Surface (ocean biome animated plane) ---
     const waterSurface = new WaterSurface(scene, this.eventBus);
+    waterSurface.setCamera(camera);
     this.loop.addSystem(waterSurface);
+
+    // --- Water Wake (foam trail around train) ---
+    const waterWake = new WaterWake(scene, this.eventBus);
+    this.loop.addSystem(waterWake);
 
     // --- Weather ---
     const weather = new WeatherSystem(scene, this.eventBus, camera);

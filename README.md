@@ -1,10 +1,10 @@
 # 海原電鉄 Unabara Dentetsu
 
-*Sea Plain Railway — inspired by Hayao Miyazaki's Spirited Away*
+_Sea Plain Railway — inspired by Hayao Miyazaki's Spirited Away_
 
 A WebXR train journey through procedurally generated landscapes. You ride an endless railway that crosses oceans in storms, passes through dense jungles, dives into crystal-lit caves, and emerges into neon cities at night. Built with Three.js and TypeScript. Works on desktop and VR headsets.
 
-The name comes from the train Chihiro rides in *Spirited Away* (千と千尋の神隠し) — the one that runs on tracks submerged in water, carrying passengers across a flooded plain toward the horizon. This project tries to capture that same feeling: sitting in a quiet cabin, watching the world drift by through rain-streaked windows.
+The name comes from the train Chihiro rides in _Spirited Away_ (千と千尋の神隠し) — the one that runs on tracks submerged in water, carrying passengers across a flooded plain toward the horizon. This project tries to capture that same feeling: sitting in a quiet cabin, watching the world drift by through rain-streaked windows.
 
 ![Screenshot](src/example/exp.png)
 
@@ -12,7 +12,7 @@ The name comes from the train Chihiro rides in *Spirited Away* (千と千尋の�
 
 The train follows a 16-biome loop that always starts the same way — on water, in a storm:
 
-**ocean** → village → spring meadow → autumn forest → **amazon** → **cave** → tunnel → industrial → dark city → suburban → construction → wilderness → thunderstorm → frozen waste → polar → arctic coast → *back to ocean*
+**ocean** → village → spring meadow → autumn forest → **amazon** → **cave** → tunnel → industrial → dark city → suburban → construction → wilderness → thunderstorm → frozen waste → polar → arctic coast → _back to ocean_
 
 Each biome lasts one full day/night cycle (8 minutes). Transitions between biomes take 15 seconds — every parameter crossfades smoothly. After arctic coast, the loop restarts from the ocean crossing.
 
@@ -81,4 +81,4 @@ Opens at `https://localhost:5173`. HTTPS is needed for WebXR.
 
 ## Acknowledgment
 
-This project is a love letter to Studio Ghibli and Hayao Miyazaki's work. The ocean train sequence in *Spirited Away* is one of the most beautiful moments in animation — quiet, melancholic, and vast. We wanted to sit in that train and never get off.
+This project is a love letter to Studio Ghibli and Hayao Miyazaki's work. The ocean train sequence in _Spirited Away_ is one of the most beautiful moments in animation — quiet, melancholic, and vast. We wanted to sit in that train and never get off.

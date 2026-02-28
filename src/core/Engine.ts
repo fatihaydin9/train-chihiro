@@ -17,6 +17,7 @@ export class Engine {
     this.renderer.xr.enabled = true;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.3;
+    this.renderer.localClippingEnabled = true;
     document.body.appendChild(this.renderer.domElement);
 
     // VR button
