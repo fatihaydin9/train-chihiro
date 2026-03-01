@@ -1,4 +1,4 @@
-# 海原電鉄 Unabara Dentetsu
+# Chihiro Train
 
 _Sea Plain Railway — inspired by Hayao Miyazaki's Spirited Away_
 
