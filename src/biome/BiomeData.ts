@@ -533,7 +533,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0,
     structureDensity: 0,
     dayNightInfluence: 0.85,
-    cloudCoverage: 0.15,
+    cloudCoverage: 0.55,
   },
 
   frozen_waste: {
@@ -725,17 +725,14 @@ export const BIOME_ORDER = [
   'ocean',           // start: train on water in storm — the Chihiro moment
   'village',         // arriving at a quiet coastal village
   'spring_meadow',   // peaceful countryside, sun coming out
-  'autumn_forest',   // deeper into colored forests
   'amazon',          // dense jungle, heavy storm
-  'cave',            // underground passage, stalactites
-  'tunnel',          // dark transit tunnel
   'industrial',      // emerging into factories
   'dark_city',       // neon-lit night city
   'suburban',        // quieter residential outskirts
-  'construction',    // passing through building sites
   'wilderness',      // back to untouched nature
   'thunderstorm',    // dramatic open storm
   'frozen_waste',    // cold barren landscape
   'polar',           // arctic beauty, aurora
-  'arctic_coast',    // edge of the frozen world → loops back to ocean
+  'cave',            // underground passage, stalactites
+  'tunnel',          // dark transit tunnel → loops back to ocean
 ];

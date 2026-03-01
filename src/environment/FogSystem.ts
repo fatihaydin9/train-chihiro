@@ -48,20 +48,25 @@ export class FogSystem implements Updatable {
     // Base density from biome fogFar (softened)
     const baseDensity = 1.8 / this.biomeFogFar;
 
-    // Night: pull fog darker, denser
-    const sinVal = Math.sin(this.timeOfDay * Math.PI * 2 - Math.PI / 2);
-    const dayFactor = Math.max(0, Math.min(1, (sinVal + 0.2) / 0.4));
+    // Day factor using same transition windows as SkySystem/LightingSystem
+    const t = this.timeOfDay;
+    let dayFactor: number;
+    if (t < 0.21) dayFactor = 0;
+    else if (t < 0.29) dayFactor = Math.min(1, (t - 0.21) / 0.08);
+    else if (t < 0.71) dayFactor = 1;
+    else if (t < 0.79) dayFactor = Math.max(0, 1 - (t - 0.71) / 0.08);
+    else dayFactor = 0;
 
-    // Darken fog color at night
+    // Darken fog color at night — very dark
     const nightFogColor = new THREE.Color(
-      this.biomeFogColor.r * 0.08,
-      this.biomeFogColor.g * 0.08,
-      this.biomeFogColor.b * 0.1,
+      this.biomeFogColor.r * 0.02,
+      this.biomeFogColor.g * 0.02,
+      this.biomeFogColor.b * 0.03,
     );
     this.fog.color.lerpColors(nightFogColor, this.biomeFogColor, dayFactor);
 
-    // Night density × 1.8, day density × 1.0
-    const nightDensity = baseDensity * 1.8;
+    // Night density × 2.0, day density × 1.0
+    const nightDensity = baseDensity * 2.0;
     const dayDensity = baseDensity * 1.0;
     this.fog.density = lerp(nightDensity, dayDensity, dayFactor);
   }

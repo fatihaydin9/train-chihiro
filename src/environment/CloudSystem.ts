@@ -12,9 +12,9 @@ import { smoothstep } from '../utils/math';
 export class CloudSystem implements Updatable {
   private mesh: THREE.Mesh<THREE.SphereGeometry, THREE.ShaderMaterial>;
 
-  // Biome-driven target
-  private targetCoverage = 0.15;
-  private currentCoverage = 0.15;
+  // Biome-driven target (start matching ocean biome)
+  private targetCoverage = 0.55;
+  private currentCoverage = 0.55;
   private windSpeed = 0.2;
 
   // Day/night state
@@ -24,8 +24,8 @@ export class CloudSystem implements Updatable {
   constructor(scene: THREE.Scene, private eventBus: EventBus) {
     const geo = new THREE.SphereGeometry(
       260,  // between sky dome (300) and sun/moon (250)
+      64,
       32,
-      16,
       0,
       Math.PI * 2,
       0,
@@ -39,7 +39,7 @@ export class CloudSystem implements Updatable {
       fog: false,
       uniforms: {
         uTime: { value: 0 },
-        uCoverage: { value: 0.15 },
+        uCoverage: { value: 0.55 },
         uSunFactor: { value: 1.0 },
         uSunsetFactor: { value: 0.0 },
       },
@@ -77,42 +77,37 @@ export class CloudSystem implements Updatable {
           return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
         }
 
-        // 2-octave FBM — performant, 8 hash calls total
+        // 3-octave FBM for soft clouds
         float fbm(vec2 p) {
           float v = 0.0;
-          v += 0.5 * noise(p);
-          v += 0.25 * noise(p * 2.0 + vec2(13.7, 7.3));
-          return v;
+          v += 0.50 * noise(p);
+          v += 0.25 * noise(p * 2.03 + vec2(13.7, 7.3));
+          v += 0.125 * noise(p * 4.01 + vec2(37.2, 19.1));
+          return v / 0.875;
         }
 
         void main() {
-          // Normalize position on dome to get UV-like coordinates
           vec3 dir = normalize(vWorldPos);
-
-          // Elevation: 0 at horizon, 1 at zenith
           float elevation = dir.y;
 
-          // Planar UV from xz direction (wind scrolls along x)
-          vec2 uv = dir.xz / max(dir.y, 0.001) * 0.15;
-          uv.x += uTime * 0.02; // wind drift
+          // Use xz directly — continuous across the whole dome, no seam
+          vec2 uv = dir.xz * 1.8;
+          uv.x += uTime * 0.02;
 
-          // Cloud density from FBM
-          float n = fbm(uv * 3.0);
+          float n = fbm(uv);
 
-          // Map coverage to density threshold
-          // Higher coverage = lower threshold = more clouds
+          // Coverage → density
           float threshold = 1.0 - uCoverage;
-          float density = smoothstep(threshold, threshold + 0.25, n);
+          float density = smoothstep(threshold, threshold + 0.35, n);
 
-          // Fade out at horizon (elevation < 0.1) and at zenith (elevation > 0.85)
-          float horizonFade = smoothstep(0.02, 0.15, elevation);
-          float zenithFade = smoothstep(0.9, 0.7, elevation);
+          // Fade near horizon and zenith
+          float horizonFade = smoothstep(0.05, 0.3, elevation);
+          float zenithFade = smoothstep(0.98, 0.8, elevation);
           density *= horizonFade * zenithFade;
 
-          // Early discard for performance
-          if (density < 0.01) discard;
+          if (density < 0.02) discard;
 
-          // Base cloud color: white during day, dark at night
+          // Color
           vec3 dayColor = vec3(0.95, 0.95, 0.97);
           vec3 nightColor = vec3(0.08, 0.09, 0.12);
           vec3 sunsetColor = vec3(0.95, 0.55, 0.25);
@@ -120,13 +115,10 @@ export class CloudSystem implements Updatable {
           vec3 col = mix(nightColor, dayColor, uSunFactor);
           col = mix(col, sunsetColor, uSunsetFactor * 0.6);
 
-          // Slight edge darkening for depth
-          float edgeDark = smoothstep(0.0, 0.5, density);
-          col *= 0.85 + 0.15 * edgeDark;
+          // Soft shading — thicker parts slightly brighter
+          col *= 0.88 + 0.12 * smoothstep(0.0, 0.6, density);
 
-          float alpha = density * 0.7;
-
-          gl_FragColor = vec4(col, alpha);
+          gl_FragColor = vec4(col, density * 0.6);
         }
       `,
     });

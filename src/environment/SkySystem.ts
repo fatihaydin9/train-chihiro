@@ -30,8 +30,8 @@ export class SkySystem implements Updatable {
   private readonly _horizon = new THREE.Color();
 
   // Day/night palette
-  private static readonly NIGHT_ZENITH = new THREE.Color(0.005, 0.007, 0.025);
-  private static readonly NIGHT_HORIZON = new THREE.Color(0.01, 0.015, 0.04);
+  private static readonly NIGHT_ZENITH = new THREE.Color(0.001, 0.002, 0.008);
+  private static readonly NIGHT_HORIZON = new THREE.Color(0.003, 0.005, 0.015);
   private static readonly DAWN_HORIZON = new THREE.Color(0.9, 0.55, 0.25);
   private static readonly DAWN_ZENITH = new THREE.Color(0.2, 0.3, 0.5);
   private static readonly DUSK_HORIZON = new THREE.Color(0.8, 0.4, 0.2);

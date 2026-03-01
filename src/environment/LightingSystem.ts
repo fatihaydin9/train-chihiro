@@ -23,8 +23,8 @@ export class LightingSystem implements Updatable {
   private biomeDirectionalIntensity = 0.2;
 
   // Cached work colors (avoid per-frame allocation)
-  private readonly _nightColor = new THREE.Color(0.15, 0.18, 0.3);
-  private readonly _nightAmbient = new THREE.Color(0.03, 0.04, 0.1);
+  private readonly _nightColor = new THREE.Color(0.06, 0.07, 0.15);
+  private readonly _nightAmbient = new THREE.Color(0.01, 0.015, 0.04);
 
   // Lightning flash — realistic multi-phase
   private lightningLight: THREE.PointLight;
@@ -179,7 +179,7 @@ export class LightingSystem implements Updatable {
 
     // Blend sun intensity between full day and moonlight based on day/night
     const dayIntensity = this.biomeDirectionalIntensity * 1.1;
-    const nightIntensity = 0.04;
+    const nightIntensity = 0.015;
     const rawIntensity =
       nightIntensity + (dayIntensity - nightIntensity) * sunFactor;
     this.directional.intensity =

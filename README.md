@@ -7,12 +7,17 @@ A WebXR train journey through procedurally generated landscapes. You ride an end
 The name comes from the train Chihiro rides in _Spirited Away_ (千と千尋の神隠し) — the one that runs on tracks submerged in water, carrying passengers across a flooded plain toward the horizon. This project tries to capture that same feeling: sitting in a quiet cabin, watching the world drift by through rain-streaked windows.
 
 ![Screenshot](src/example/exp.png)
+![Screenshot](src/example/exp2.png)
+![Screenshot](src/example/exp3.png)
+![Screenshot](src/example/exp4.png)
+![Screenshot](src/example/exp5.png)
+![Screenshot](src/example/exp6.png)
 
 ## The journey
 
-The train follows a 16-biome loop that always starts the same way — on water, in a storm:
+The train follows a 13-biome loop that always starts the same way — on water, in a storm:
 
-**ocean** → village → spring meadow → autumn forest → **amazon** → **cave** → tunnel → industrial → dark city → suburban → construction → wilderness → thunderstorm → frozen waste → polar → arctic coast → _back to ocean_
+**ocean** → village → spring meadow → **amazon** → industrial → dark city → suburban → wilderness → thunderstorm → frozen waste → polar → **cave** → tunnel → _back to ocean_
 
 Each biome lasts one full day/night cycle (8 minutes). Transitions between biomes take 15 seconds — every parameter crossfades smoothly. After arctic coast, the loop restarts from the ocean crossing.
 

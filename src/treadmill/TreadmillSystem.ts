@@ -35,7 +35,7 @@ export class TreadmillSystem implements Updatable {
 
     // Speed toggle
     this.eventBus.on("train:speed-changed", ({ fast }) => {
-      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.55;
+      this.speed = fast ? WORLD_SPEED * 1.4 : WORLD_SPEED * 0.55;
     });
   }
 

@@ -4,7 +4,8 @@ import { BIOME_DEFINITIONS, BIOME_ORDER } from './BiomeData';
 import { BiomeLerper } from './BiomeLerper';
 import { BIOME_TRANSITION_DURATION, DAY_CYCLE_DURATION } from '../utils/constants';
 
-const OCEAN_DURATION = DAY_CYCLE_DURATION; // ocean biome: full day/night cycle
+const OCEAN_DURATION = DAY_CYCLE_DURATION;
+const TUNNEL_DURATION = DAY_CYCLE_DURATION * 0.5; // tunnel: half length
 
 export class BiomeController implements Updatable {
   private currentIndex: number;
@@ -59,7 +60,10 @@ export class BiomeController implements Updatable {
         this.currentIndex = nextIndex;
         this.transitioning = false;
         this.timer = 0;
-        this.biomeDuration = BIOME_ORDER[nextIndex] === 'ocean' ? OCEAN_DURATION : DAY_CYCLE_DURATION;
+        const nextBiome = BIOME_ORDER[nextIndex];
+        this.biomeDuration = nextBiome === 'ocean' ? OCEAN_DURATION
+          : nextBiome === 'tunnel' ? TUNNEL_DURATION
+          : DAY_CYCLE_DURATION;
         this.eventBus.emit('biome:changed', { biome: toName });
       }
     }

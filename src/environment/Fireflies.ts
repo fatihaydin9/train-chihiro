@@ -36,7 +36,7 @@ export class Fireflies implements Updatable {
       positions[i * 3 + 2] = Math.sin(angle) * dist;
 
       // Much smaller sizes
-      sizes[i] = 0.08 + Math.random() * 0.1;
+      sizes[i] = 0.15 + Math.random() * 0.15;
 
       // Animation params: wander phase, rise type (0-4), rise speed
       this.phases[i * 3] = Math.random() * Math.PI * 2;
@@ -143,7 +143,7 @@ export class Fireflies implements Updatable {
           float glow = 1.0 - smoothstep(0.0, 1.0, dist);
           glow *= glow;
 
-          vec3 color = mix(vec3(0.4, 0.85, 0.1), vec3(0.95, 1.0, 0.3), vBrightness * 0.5) * 2.5;
+          vec3 color = mix(vec3(0.9, 0.45, 0.05), vec3(1.0, 0.7, 0.15), vBrightness * 0.5) * 3.0;
           float alpha = glow * vBrightness * uOpacity;
 
           if (alpha < 0.01) discard;
