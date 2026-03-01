@@ -3,9 +3,9 @@ import type { Updatable } from '../core/GameLoop';
 import type { EventBus } from '../core/EventBus';
 import { GROUND_Y } from '../utils/constants';
 
-const FIREFLY_COUNT = 30;
-const MIN_Y = GROUND_Y + 0.3;
-const MAX_Y = GROUND_Y + 5.0;
+const FIREFLY_COUNT = 60;
+const WATER_Y = GROUND_Y + 0.05;  // just above water surface
+const MAX_Y = GROUND_Y + 4.0;
 
 /**
  * Fireflies that appear over water at night in the ocean biome.
@@ -28,19 +28,20 @@ export class Fireflies implements Updatable {
     this.phases = new Float32Array(FIREFLY_COUNT * 3); // phase, blinkSpeed, blinkOffset
 
     for (let i = 0; i < FIREFLY_COUNT; i++) {
-      // Scatter around the train — left, right, front, behind
+      // All fireflies start at water surface — they will rise via shader
       const angle = Math.random() * Math.PI * 2;
-      const dist = 3 + Math.random() * 25; // 3m–28m from center
+      const dist = 3 + Math.random() * 30;
       positions[i * 3] = Math.cos(angle) * dist;
-      positions[i * 3 + 1] = MIN_Y + Math.random() * (MAX_Y - MIN_Y);
+      positions[i * 3 + 1] = WATER_Y;  // start at water
       positions[i * 3 + 2] = Math.sin(angle) * dist;
 
-      sizes[i] = 0.4 + Math.random() * 0.4;
+      // Much smaller sizes
+      sizes[i] = 0.08 + Math.random() * 0.1;
 
-      // Random animation params
-      this.phases[i * 3] = Math.random() * Math.PI * 2;     // wander phase
-      this.phases[i * 3 + 1] = 0.5 + Math.random() * 2.0;  // blink speed
-      this.phases[i * 3 + 2] = Math.random() * Math.PI * 2; // blink offset
+      // Animation params: wander phase, rise type (0-4), rise speed
+      this.phases[i * 3] = Math.random() * Math.PI * 2;
+      this.phases[i * 3 + 1] = Math.floor(Math.random() * 5.0); // 5 rise patterns
+      this.phases[i * 3 + 2] = Math.random() * Math.PI * 2;
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -55,11 +56,13 @@ export class Fireflies implements Updatable {
       uniforms: {
         uTime: { value: 0 },
         uOpacity: { value: 0 },
+        uMaxRiseHeight: { value: MAX_Y - WATER_Y },
       },
       vertexShader: /* glsl */ `
         attribute float aSize;
         uniform float uTime;
         uniform float uOpacity;
+        uniform float uMaxRiseHeight;
         varying float vBrightness;
 
         float hash(float n) {
@@ -67,26 +70,67 @@ export class Fireflies implements Updatable {
         }
 
         void main() {
-          // Gentle wandering motion
           float id = float(gl_VertexID);
           float phase = hash(id * 1.17) * 6.28;
-          float speed = 0.3 + hash(id * 2.31) * 0.5;
+          float speed = 0.15 + hash(id * 2.31) * 0.3;
+          float riseType = floor(hash(id * 4.53) * 5.0); // 0..4
+          float riseDelay = hash(id * 7.19) * 12.0; // stagger starts
+          float t = max(0.0, uTime - riseDelay);
 
           vec3 pos = position;
-          pos.x += sin(uTime * speed + phase) * 1.5;
-          pos.y += sin(uTime * speed * 0.7 + phase * 1.3) * 0.8;
-          pos.z += cos(uTime * speed * 0.6 + phase * 0.7) * 1.2;
 
-          // Blinking: each firefly has its own rhythm, intermittent flashes
-          float blinkSpeed = 0.4 + hash(id * 3.71) * 1.0;
+          // --- 5 different rise patterns from water surface ---
+          float maxH = uMaxRiseHeight * (0.5 + hash(id * 6.11) * 0.5);
+
+          if (riseType < 1.0) {
+            // Pattern 0: Slow straight rise with gentle sway
+            float rise = min(t * 0.15, 1.0);
+            pos.y += rise * maxH;
+            pos.x += sin(t * speed + phase) * 0.8;
+            pos.z += cos(t * speed * 0.8 + phase) * 0.6;
+          } else if (riseType < 2.0) {
+            // Pattern 1: Spiral rise — corkscrewing upward
+            float rise = min(t * 0.12, 1.0);
+            float spiralR = 1.5 + hash(id * 3.3) * 2.0;
+            pos.y += rise * maxH;
+            pos.x += sin(t * 0.6 + phase) * spiralR * rise;
+            pos.z += cos(t * 0.6 + phase) * spiralR * rise;
+          } else if (riseType < 3.0) {
+            // Pattern 2: Burst up then float — quick launch, slow drift
+            float burst = 1.0 - exp(-t * 0.5);
+            pos.y += burst * maxH;
+            pos.x += sin(t * speed * 0.5 + phase) * 2.0 * burst;
+            pos.z += cos(t * speed * 0.4 + phase * 1.5) * 1.5 * burst;
+          } else if (riseType < 4.0) {
+            // Pattern 3: Zigzag rise — side to side as it climbs
+            float rise = min(t * 0.18, 1.0);
+            pos.y += rise * maxH;
+            float zigzag = sin(t * 1.8 + phase) * 2.5;
+            pos.x += zigzag * rise;
+            pos.z += cos(t * 0.3 + phase) * 0.5;
+          } else {
+            // Pattern 4: Floating drift — very slow rise, wide horizontal wander
+            float rise = min(t * 0.08, 1.0);
+            pos.y += rise * maxH * 0.6;
+            pos.x += sin(t * 0.25 + phase) * 4.0 * rise;
+            pos.z += cos(t * 0.2 + phase * 0.7) * 3.5 * rise;
+          }
+
+          // Small wobble on top of all patterns
+          pos.x += sin(t * 0.7 + phase * 2.1) * 0.2;
+          pos.y += sin(t * 0.5 + phase * 1.7) * 0.15;
+
+          // Blinking
+          float blinkSpeed = 0.5 + hash(id * 3.71) * 1.5;
           float blinkOffset = hash(id * 5.13) * 6.28;
-          // Flash when sin > 0.4 (~30% of the time)
           float raw = sin(uTime * blinkSpeed + blinkOffset);
-          float glow = smoothstep(0.4, 0.85, raw);
-          vBrightness = glow;
+          float glow = smoothstep(0.3, 0.8, raw);
+          // Fade in as it rises from water
+          float riseFade = smoothstep(0.0, 0.3, (pos.y - position.y) / maxH);
+          vBrightness = glow * riseFade;
 
           vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = aSize * (350.0 / -mvPos.z) * uOpacity;
+          gl_PointSize = aSize * (200.0 / -mvPos.z) * uOpacity;
           gl_Position = projectionMatrix * mvPos;
         }
       `,
@@ -95,13 +139,11 @@ export class Fireflies implements Updatable {
         varying float vBrightness;
 
         void main() {
-          // Soft circular glow
           float dist = length(gl_PointCoord - 0.5) * 2.0;
           float glow = 1.0 - smoothstep(0.0, 1.0, dist);
-          glow *= glow; // softer falloff
+          glow *= glow;
 
-          // Yellow-green glow — bright and punchy
-          vec3 color = mix(vec3(0.5, 0.9, 0.1), vec3(0.9, 1.0, 0.2), vBrightness * 0.5) * 3.0;
+          vec3 color = mix(vec3(0.4, 0.85, 0.1), vec3(0.95, 1.0, 0.3), vBrightness * 0.5) * 2.5;
           float alpha = glow * vBrightness * uOpacity;
 
           if (alpha < 0.01) discard;

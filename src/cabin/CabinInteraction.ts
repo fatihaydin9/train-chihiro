@@ -39,7 +39,7 @@ export class CabinInteraction implements Updatable {
 
   // Headlight mode label tracking
   private headlightModeIndex = 0; // starts off
-  private static readonly HL_LABELS = ["Far: Kapali", "Far: Kisa", "Far: Uzun"];
+  private static readonly HL_LABELS = ["Headlight: Off", "Headlight: Low", "Headlight: High"];
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -60,7 +60,7 @@ export class CabinInteraction implements Updatable {
     const seatZ = deskZ + 0.6;
     this.zones.push({
       id: "chair",
-      label: "Otur [E]",
+      label: "Sit [E]",
       box: new THREE.Box3(
         new THREE.Vector3(-0.35, floorY + 0.3, seatZ - 0.3),
         new THREE.Vector3(0.35, floorY + 0.9, seatZ + 0.5),
@@ -75,7 +75,7 @@ export class CabinInteraction implements Updatable {
     const bedZ2 = 2.6;
     this.zones.push({
       id: "bed",
-      label: "Uzan [E]",
+      label: "Lie Down [E]",
       box: new THREE.Box3(
         new THREE.Vector3(bedX - 0.5, floorY + 0.2, bedZ1 - 0.1),
         new THREE.Vector3(bedX + 0.5, floorY + 0.8, bedZ2 + 0.1),
@@ -87,7 +87,7 @@ export class CabinInteraction implements Updatable {
     // Speed toggle — looking at left lever area (seat only)
     this.zones.push({
       id: "speed",
-      label: () => (this.isFastSpeed ? "Yavasla [E]" : "Hizlan [E]"),
+      label: () => (this.isFastSpeed ? "Slow Down [E]" : "Speed Up [E]"),
       box: new THREE.Box3(
         new THREE.Vector3(-0.65, floorY + 0.75, deskZ - 0.25),
         new THREE.Vector3(-0.25, floorY + 1.0, deskZ + 0.05),
@@ -117,7 +117,7 @@ export class CabinInteraction implements Updatable {
     const nsZ = bedZ1 + 0.15;
     this.zones.push({
       id: "lantern",
-      label: "Lamba Ac/Kapat [E]",
+      label: "Lamp On/Off [E]",
       box: new THREE.Box3(
         new THREE.Vector3(nsX - 0.25, floorY + 0.2, nsZ - 0.25),
         new THREE.Vector3(nsX + 0.25, floorY + 0.9, nsZ + 0.25),
@@ -132,7 +132,7 @@ export class CabinInteraction implements Updatable {
     const stoveZ = 0.2 + 0.4; // kitZ1 + 0.4
     this.zones.push({
       id: "stove",
-      label: "Ocak Yak/Söndür [E]",
+      label: "Stove On/Off [E]",
       box: new THREE.Box3(
         new THREE.Vector3(kitchenX - 0.35, floorY + 0.5, stoveZ - 0.3),
         new THREE.Vector3(kitchenX + 0.35, floorY + 1.1, stoveZ + 0.3),
@@ -146,7 +146,7 @@ export class CabinInteraction implements Updatable {
     const saCarDoorInside = SA_CAR_START_Z + 1.0;
     this.zones.push({
       id: "sa-door-enter",
-      label: "Vagona Gec [E]",
+      label: "Enter Car [E]",
       box: new THREE.Box3(
         new THREE.Vector3(-0.6, floorY, halfD - 0.8),
         new THREE.Vector3(0.6, floorY + 2.5, halfD + 0.3),
@@ -165,7 +165,7 @@ export class CabinInteraction implements Updatable {
     const cabinDoorInside = halfD - 1.0;
     this.zones.push({
       id: "sa-door-return",
-      label: "Kabine Don [E]",
+      label: "Return to Cabin [E]",
       box: new THREE.Box3(
         new THREE.Vector3(-0.6, floorY, SA_CAR_START_Z - 0.3),
         new THREE.Vector3(0.6, floorY + 2.5, SA_CAR_START_Z + 1.0),
@@ -237,7 +237,7 @@ export class CabinInteraction implements Updatable {
       return;
     }
     if (this.isLying) {
-      this.tooltip.textContent = "Kalk [E / Esc]";
+      this.tooltip.textContent = "Get Up [E / Esc]";
       this.tooltip.style.opacity = "1";
       this.activeZone = this.zones.find((z) => z.id === "bed") ?? null;
       return;

@@ -74,6 +74,8 @@ Full cycle: 8 minutes. Dawn transitions and sunset use smoothstep easing for gra
 
 3m × 3m × 6m interior. Front: driving console with levers, gauges, buttons. Back: bed, nightstand with lantern, small kitchen. Windows get frost in cold biomes and rain streaks in storms.
 
+Behind the cabin is a Spirited Away-style wooden passenger car with barrel-vault ceiling, red velvet bench seats, brass poles, and warm amber lighting. **No-Face (Kaonashi)** sits quietly on one of the benches — built with LatheGeometry for a smooth bell-shaped profile, a translucent ghost overlay, a white mask with painted eyes and mouth, and a dark puddle spreading beneath him.
+
 All audio is procedural — no samples. Train rumble is brown noise through a lowpass. Wheel hum is bandpass-filtered noise. Rail clack is a periodic burst. Rain is three filtered noise layers plus drip sounds.
 
 ## Running it
