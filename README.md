@@ -11,7 +11,6 @@ The name comes from the train Chihiro rides in _Spirited Away_ (千と千尋の�
 ![Screenshot](src/example/exp3.png)
 ![Screenshot](src/example/exp4.png)
 ![Screenshot](src/example/exp5.png)
-![Screenshot](src/example/exp6.png)
 
 ## The journey
 
