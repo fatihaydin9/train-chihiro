@@ -1,17 +1,19 @@
-import * as THREE from 'three';
-import type { Updatable } from '../core/GameLoop';
-import type { EventBus } from '../core/EventBus';
-import type { VoxelRegistry } from '../voxel/VoxelRegistry';
-import type { InstancedVoxelBatch } from '../voxel/InstancedVoxelBatch';
-import { WORLD_SPEED, GROUND_Y } from '../utils/constants';
-import { seededRandom } from '../utils/math';
+import * as THREE from "three";
 
-const MID_DISTANCE = 120;      // village silhouettes
-const FAR_DISTANCE = 200;      // mountains
-const MID_PARALLAX = 0.7;      // moves at 70% of world speed
-const FAR_PARALLAX = 0.3;      // moves at 30% of world speed
-const STRIP_DEPTH = 400;       // total Z length of scenery strip
-const RECYCLE_Z = 150;         // recycle when passed player
+import { GROUND_Y, WORLD_SPEED } from "../utils/constants";
+
+import type { EventBus } from "../core/EventBus";
+import type { InstancedVoxelBatch } from "../voxel/InstancedVoxelBatch";
+import type { Updatable } from "../core/GameLoop";
+import type { VoxelRegistry } from "../voxel/VoxelRegistry";
+import { seededRandom } from "../utils/math";
+
+const MID_DISTANCE = 120; // village silhouettes
+const FAR_DISTANCE = 200; // mountains
+const MID_PARALLAX = 0.7; // moves at 70% of world speed
+const FAR_PARALLAX = 0.3; // moves at 30% of world speed
+const STRIP_DEPTH = 400; // total Z length of scenery strip
+const RECYCLE_Z = 150; // recycle when passed player
 
 interface SceneryLayer {
   group: THREE.Group;
@@ -23,15 +25,23 @@ export class DistantScenery implements Updatable {
   private midLayer: SceneryLayer;
   private farLayer: SceneryLayer;
   private currentDistantModels: string[] = [];
-  private speed = WORLD_SPEED * 0.35;
+  private speed = WORLD_SPEED * 0.55;
 
   constructor(
     private scene: THREE.Scene,
     private eventBus: EventBus,
     private registry: VoxelRegistry,
   ) {
-    this.midLayer = { group: new THREE.Group(), parallax: MID_PARALLAX, batches: [] };
-    this.farLayer = { group: new THREE.Group(), parallax: FAR_PARALLAX, batches: [] };
+    this.midLayer = {
+      group: new THREE.Group(),
+      parallax: MID_PARALLAX,
+      batches: [],
+    };
+    this.farLayer = {
+      group: new THREE.Group(),
+      parallax: FAR_PARALLAX,
+      batches: [],
+    };
     scene.add(this.midLayer.group);
     scene.add(this.farLayer.group);
 
@@ -40,19 +50,19 @@ export class DistantScenery implements Updatable {
     this.populateMidLayer();
 
     // Rebuild mid-layer scenery when biome changes
-    this.eventBus.on('biome:changed', ({ biome }) => {
+    this.eventBus.on("biome:changed", ({ biome }) => {
       // Will be picked up via distantModels on next rebuild
     });
 
-    this.eventBus.on('biome:transition-tick', (config) => {
+    this.eventBus.on("biome:transition-tick", (config) => {
       const models = config.distantModels;
       if (models !== this.currentDistantModels) {
         this.currentDistantModels = models;
       }
     });
 
-    this.eventBus.on('train:speed-changed', ({ fast }) => {
-      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.35;
+    this.eventBus.on("train:speed-changed", ({ fast }) => {
+      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.55;
     });
   }
 
@@ -91,7 +101,7 @@ export class DistantScenery implements Updatable {
    */
   private populateFarLayer(): void {
     const rng = seededRandom(Date.now());
-    const mountainTypes = ['mountain_snow', 'mountain_autumn', 'hill_gentle'];
+    const mountainTypes = ["mountain_snow", "mountain_autumn", "hill_gentle"];
 
     for (const typeName of mountainTypes) {
       const model = this.registry.getModel(typeName);
@@ -115,6 +125,7 @@ export class DistantScenery implements Updatable {
         dummy.updateMatrix();
         batch.setTransform(i, dummy.matrix);
       }
+      batch.flush();
 
       this.farLayer.group.add(batch.mesh);
       this.farLayer.batches.push(batch);
@@ -128,22 +139,32 @@ export class DistantScenery implements Updatable {
     const rng = seededRandom(Date.now() + 9999);
 
     // Use biome distant models or defaults
-    const models = this.currentDistantModels.length > 0
-      ? this.currentDistantModels
-      : ['house_small', 'cabin_distant', 'pine_snow_tall'];
+    const models =
+      this.currentDistantModels.length > 0
+        ? this.currentDistantModels
+        : ["house_small", "cabin_distant", "pine_snow_tall"];
 
     for (const typeName of models) {
       const model = this.registry.getModel(typeName);
       if (!model) continue;
 
-      const count = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('mosque')
-        ? 3  // fewer structures
-        : 5; // more trees
+      const count =
+        typeName.includes("house") ||
+        typeName.includes("cabin") ||
+        typeName.includes("mosque")
+          ? 3 // fewer structures
+          : 5; // more trees
 
       const batch = model.createBatch(count);
       const dummy = new THREE.Object3D();
 
-      const isStructure = typeName.includes('house') || typeName.includes('cabin') || typeName.includes('mosque') || typeName.includes('barn') || typeName.includes('windmill') || typeName.includes('igloo');
+      const isStructure =
+        typeName.includes("house") ||
+        typeName.includes("cabin") ||
+        typeName.includes("mosque") ||
+        typeName.includes("barn") ||
+        typeName.includes("windmill") ||
+        typeName.includes("igloo");
 
       for (let i = 0; i < count; i++) {
         const side = rng() > 0.5 ? 1 : -1;
@@ -160,6 +181,7 @@ export class DistantScenery implements Updatable {
         dummy.updateMatrix();
         batch.setTransform(i, dummy.matrix);
       }
+      batch.flush();
 
       this.midLayer.group.add(batch.mesh);
       this.midLayer.batches.push(batch);

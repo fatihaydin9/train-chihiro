@@ -1,7 +1,16 @@
-import * as THREE from 'three';
-import type { Updatable } from '../core/GameLoop';
-import type { EventBus } from '../core/EventBus';
-import { CABIN_FLOOR_Y, CABIN_WALL_THICK, CABIN_DEPTH, CABIN_WIDTH } from '../utils/constants';
+import * as THREE from "three";
+
+import {
+  CABIN_DEPTH,
+  CABIN_FLOOR_Y,
+  CABIN_WALL_THICK,
+  CABIN_WIDTH,
+  SA_CAR_DEPTH,
+  SA_CAR_START_Z,
+} from "../utils/constants";
+
+import type { EventBus } from "../core/EventBus";
+import type { Updatable } from "../core/GameLoop";
 
 interface InteractionZone {
   id: string;
@@ -10,6 +19,8 @@ interface InteractionZone {
   action: () => void;
   /** Only available when sitting in the driver seat */
   seatOnly?: boolean;
+  /** Optional extra check — zone only active when this returns true */
+  isInRange?: () => boolean;
 }
 
 /**
@@ -19,6 +30,7 @@ interface InteractionZone {
 export class CabinInteraction implements Updatable {
   private zones: InteractionZone[] = [];
   private raycaster = new THREE.Raycaster();
+  private readonly _dir = new THREE.Vector3();
   private tooltip: HTMLDivElement;
   private activeZone: InteractionZone | null = null;
   private isSitting = false;
@@ -27,7 +39,7 @@ export class CabinInteraction implements Updatable {
 
   // Headlight mode label tracking
   private headlightModeIndex = 0; // starts off
-  private static readonly HL_LABELS = ['Far: Kapali', 'Far: Kisa', 'Far: Uzun'];
+  private static readonly HL_LABELS = ["Far: Kapali", "Far: Kisa", "Far: Uzun"];
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -38,18 +50,23 @@ export class CabinInteraction implements Updatable {
     const halfW = CABIN_WIDTH / 2;
     const halfD = CABIN_DEPTH / 2;
 
+    // Wall boundary Z — separates cabin from SA car
+    const wallBoundaryZ = (halfD + SA_CAR_START_Z) / 2; // midpoint of gap
+    const inCabin = () => this.camera.position.z < wallBoundaryZ;
+
     // Chair zone
     const deskDepth = 0.7;
     const deskZ = -halfD + deskDepth / 2 + 0.02;
     const seatZ = deskZ + 0.6;
     this.zones.push({
-      id: 'chair',
-      label: 'Otur [E]',
+      id: "chair",
+      label: "Otur [E]",
       box: new THREE.Box3(
         new THREE.Vector3(-0.35, floorY + 0.3, seatZ - 0.3),
         new THREE.Vector3(0.35, floorY + 0.9, seatZ + 0.5),
       ),
       action: () => this.toggleSit(),
+      isInRange: inCabin,
     });
 
     // Bed zone
@@ -57,37 +74,41 @@ export class CabinInteraction implements Updatable {
     const bedZ1 = 0.3;
     const bedZ2 = 2.6;
     this.zones.push({
-      id: 'bed',
-      label: 'Uzan [E]',
+      id: "bed",
+      label: "Uzan [E]",
       box: new THREE.Box3(
         new THREE.Vector3(bedX - 0.5, floorY + 0.2, bedZ1 - 0.1),
         new THREE.Vector3(bedX + 0.5, floorY + 0.8, bedZ2 + 0.1),
       ),
       action: () => this.toggleLie(),
+      isInRange: inCabin,
     });
 
     // Speed toggle — looking at left lever area (seat only)
     this.zones.push({
-      id: 'speed',
-      label: () => this.isFastSpeed ? 'Yavasla [E]' : 'Hizlan [E]',
+      id: "speed",
+      label: () => (this.isFastSpeed ? "Yavasla [E]" : "Hizlan [E]"),
       box: new THREE.Box3(
         new THREE.Vector3(-0.65, floorY + 0.75, deskZ - 0.25),
         new THREE.Vector3(-0.25, floorY + 1.0, deskZ + 0.05),
       ),
       action: () => this.toggleSpeed(),
       seatOnly: true,
+      isInRange: inCabin,
     });
 
     // Headlight control — right side button (seat only)
     this.zones.push({
-      id: 'headlight',
-      label: () => CabinInteraction.HL_LABELS[(this.headlightModeIndex + 1) % 3] + ' [E]',
+      id: "headlight",
+      label: () =>
+        CabinInteraction.HL_LABELS[(this.headlightModeIndex + 1) % 3] + " [E]",
       box: new THREE.Box3(
         new THREE.Vector3(0.25, floorY + 0.75, deskZ - 0.25),
         new THREE.Vector3(0.65, floorY + 1.0, deskZ + 0.05),
       ),
       action: () => this.cycleHeadlight(),
       seatOnly: true,
+      isInRange: inCabin,
     });
 
     // Lantern toggle (nightstand next to bed)
@@ -95,44 +116,86 @@ export class CabinInteraction implements Updatable {
     const nsX = bedX - bedW / 2 - 0.2;
     const nsZ = bedZ1 + 0.15;
     this.zones.push({
-      id: 'lantern',
-      label: 'Lamba Ac/Kapat [E]',
+      id: "lantern",
+      label: "Lamba Ac/Kapat [E]",
       box: new THREE.Box3(
         new THREE.Vector3(nsX - 0.25, floorY + 0.2, nsZ - 0.25),
         new THREE.Vector3(nsX + 0.25, floorY + 0.9, nsZ + 0.25),
       ),
-      action: () => this.eventBus.emit('interaction:lantern-toggle', undefined as never),
+      action: () =>
+        this.eventBus.emit("interaction:lantern-toggle", undefined as never),
+      isInRange: inCabin,
     });
 
     // Stove toggle (kitchen area, left wall)
     const kitchenX = -halfW + CABIN_WALL_THICK / 2 + 0.275;
     const stoveZ = 0.2 + 0.4; // kitZ1 + 0.4
     this.zones.push({
-      id: 'stove',
-      label: 'Ocak Yak/Söndür [E]',
+      id: "stove",
+      label: "Ocak Yak/Söndür [E]",
       box: new THREE.Box3(
         new THREE.Vector3(kitchenX - 0.35, floorY + 0.5, stoveZ - 0.3),
         new THREE.Vector3(kitchenX + 0.35, floorY + 1.1, stoveZ + 0.3),
       ),
-      action: () => this.eventBus.emit('interaction:stove-toggle', undefined as never),
+      action: () =>
+        this.eventBus.emit("interaction:stove-toggle", undefined as never),
+      isInRange: inCabin,
+    });
+
+    // Cabin back door — enter SA car (land just past the door)
+    const saCarDoorInside = SA_CAR_START_Z + 1.0;
+    this.zones.push({
+      id: "sa-door-enter",
+      label: "Vagona Gec [E]",
+      box: new THREE.Box3(
+        new THREE.Vector3(-0.6, floorY, halfD - 0.8),
+        new THREE.Vector3(0.6, floorY + 2.5, halfD + 0.3),
+      ),
+      action: () =>
+        this.eventBus.emit("interaction:teleport", {
+          x: 0,
+          y: CABIN_FLOOR_Y + 1.6,
+          z: saCarDoorInside,
+        }),
+      /** Only show when player is on cabin side */
+      isInRange: () => this.camera.position.z < wallBoundaryZ,
+    });
+
+    // SA car front door — return to cabin (land just inside cabin)
+    const cabinDoorInside = halfD - 1.0;
+    this.zones.push({
+      id: "sa-door-return",
+      label: "Kabine Don [E]",
+      box: new THREE.Box3(
+        new THREE.Vector3(-0.6, floorY, SA_CAR_START_Z - 0.3),
+        new THREE.Vector3(0.6, floorY + 2.5, SA_CAR_START_Z + 1.0),
+      ),
+      action: () =>
+        this.eventBus.emit("interaction:teleport", {
+          x: 0,
+          y: CABIN_FLOOR_Y + 1.6,
+          z: cabinDoorInside,
+        }),
+      /** Only show when player is on SA car side */
+      isInRange: () => this.camera.position.z > wallBoundaryZ,
     });
 
     // Create tooltip overlay
-    this.tooltip = document.createElement('div');
+    this.tooltip = document.createElement("div");
     this.tooltip.style.cssText =
-      'position:fixed;top:50%;left:50%;transform:translate(-50%,40px);' +
-      'color:#fff;font-family:sans-serif;font-size:14px;font-weight:500;' +
-      'background:rgba(0,0,0,0.55);padding:6px 14px;border-radius:6px;' +
-      'pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:100;' +
-      'text-align:center;letter-spacing:0.3px;';
+      "position:fixed;top:50%;left:50%;transform:translate(-50%,40px);" +
+      "color:#fff;font-family:sans-serif;font-size:14px;font-weight:500;" +
+      "background:rgba(0,0,0,0.55);padding:6px 14px;border-radius:6px;" +
+      "pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:100;" +
+      "text-align:center;letter-spacing:0.3px;";
     document.body.appendChild(this.tooltip);
 
     // E key handler
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyE' && this.activeZone) {
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "KeyE" && this.activeZone) {
         this.activeZone.action();
       }
-      if (e.code === 'Escape') {
+      if (e.code === "Escape") {
         if (this.isSitting) this.toggleSit();
         if (this.isLying) this.toggleLie();
       }
@@ -140,7 +203,10 @@ export class CabinInteraction implements Updatable {
   }
 
   update(): void {
-    this.raycaster.set(this.camera.position, this.camera.getWorldDirection(new THREE.Vector3()));
+    this.raycaster.set(
+      this.camera.position,
+      this.camera.getWorldDirection(this._dir),
+    );
     this.raycaster.far = 3;
 
     let found: InteractionZone | null = null;
@@ -148,6 +214,7 @@ export class CabinInteraction implements Updatable {
 
     for (const zone of this.zones) {
       if (zone.seatOnly && !this.isSitting) continue;
+      if (zone.isInRange && !zone.isInRange()) continue;
       if (ray.intersectsBox(zone.box)) {
         found = zone;
         break;
@@ -156,54 +223,54 @@ export class CabinInteraction implements Updatable {
 
     // Resolve label (string or function)
     const getLabel = (z: InteractionZone): string =>
-      typeof z.label === 'function' ? z.label() : z.label;
+      typeof z.label === "function" ? z.label() : z.label;
 
     if (this.isSitting) {
-      if (found && found.id !== 'chair') {
+      if (found && found.id !== "chair") {
         this.tooltip.textContent = getLabel(found);
-        this.tooltip.style.opacity = '1';
+        this.tooltip.style.opacity = "1";
         this.activeZone = found;
       } else {
-        this.tooltip.style.opacity = '0';
-        this.activeZone = this.zones.find(z => z.id === 'chair') ?? null;
+        this.tooltip.style.opacity = "0";
+        this.activeZone = this.zones.find((z) => z.id === "chair") ?? null;
       }
       return;
     }
     if (this.isLying) {
-      this.tooltip.textContent = 'Kalk [E / Esc]';
-      this.tooltip.style.opacity = '1';
-      this.activeZone = this.zones.find(z => z.id === 'bed') ?? null;
+      this.tooltip.textContent = "Kalk [E / Esc]";
+      this.tooltip.style.opacity = "1";
+      this.activeZone = this.zones.find((z) => z.id === "bed") ?? null;
       return;
     }
 
     this.activeZone = found;
     if (found) {
       this.tooltip.textContent = getLabel(found);
-      this.tooltip.style.opacity = '1';
+      this.tooltip.style.opacity = "1";
     } else {
-      this.tooltip.style.opacity = '0';
+      this.tooltip.style.opacity = "0";
     }
   }
 
   private toggleSit(): void {
     this.isSitting = !this.isSitting;
     if (this.isLying) this.isLying = false;
-    this.eventBus.emit('interaction:sit', { active: this.isSitting });
+    this.eventBus.emit("interaction:sit", { active: this.isSitting });
   }
 
   private toggleLie(): void {
     this.isLying = !this.isLying;
     if (this.isSitting) this.isSitting = false;
-    this.eventBus.emit('interaction:lie', { active: this.isLying });
+    this.eventBus.emit("interaction:lie", { active: this.isLying });
   }
 
   private cycleHeadlight(): void {
     this.headlightModeIndex = (this.headlightModeIndex + 1) % 3;
-    this.eventBus.emit('interaction:light-toggle', undefined as never);
+    this.eventBus.emit("interaction:light-toggle", undefined as never);
   }
 
   private toggleSpeed(): void {
     this.isFastSpeed = !this.isFastSpeed;
-    this.eventBus.emit('train:speed-changed', { fast: this.isFastSpeed });
+    this.eventBus.emit("train:speed-changed", { fast: this.isFastSpeed });
   }
 }

@@ -2,7 +2,7 @@
 export const CHUNK_DEPTH = 40; // meters along Z
 export const CHUNK_WIDTH = 80; // meters along X
 export const CHUNK_COUNT = 8;
-export const WORLD_SPEED = 18; // m/s along +Z toward player
+export const WORLD_SPEED = 32; // m/s along +Z toward player
 export const TRACK_GAUGE = 1.435; // standard gauge in meters
 
 // Terrain
@@ -25,7 +25,7 @@ export const VOXEL_BLOCK_SIZE = 1.0;
 export const TERRAIN_MAX_HEIGHT = 6;
 
 // Flora bands — forest feeling with layered depth
-export const FLORA_NEAR_MIN = 5;  // close trees for immersion (but off the rails)
+export const FLORA_NEAR_MIN = 5; // close trees for immersion (but off the rails)
 export const FLORA_NEAR_MAX = 15;
 export const FLORA_FAR_MIN = 15;
 export const FLORA_FAR_MAX = 38;
@@ -49,14 +49,18 @@ export const CABIN_DEPTH = 6.0;
 export const CABIN_WALL_THICK = 0.12;
 export const CABIN_FLOOR_Y = GROUND_Y + 0.25;
 
-// Train cars ahead
+// Train cars
 export const TRAIN_CAR_COUNT = 3;
 export const TRAIN_CAR_GAP = 0.4;
 export const TRAIN_CAR_DEPTH = 8.0;
+
+// Spirited Away wooden passenger car (behind cabin, +Z)
+export const SA_CAR_DEPTH = 8.0;
+export const SA_CAR_START_Z = CABIN_DEPTH / 2 + TRAIN_CAR_GAP; // 3.4
 
 // Rivers and bridges
 export const RIVER_PROBABILITY = 0.15;
 export const BRIDGE_HEIGHT = 3.0;
 
 // Day/night cycle
-export const DAY_CYCLE_DURATION = 480; // seconds for full cycle (8 min: 4 day + 4 night)
+export const DAY_CYCLE_DURATION = 420; // seconds for full cycle (7 min: 3 day + 3 night + 1 transition)

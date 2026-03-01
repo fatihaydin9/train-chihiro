@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   CABIN_WIDTH, CABIN_HEIGHT, CABIN_DEPTH, CABIN_FLOOR_Y,
   TRAIN_CAR_COUNT, TRAIN_CAR_GAP, TRAIN_CAR_DEPTH,
-  TRACK_GAUGE,
+  TRACK_GAUGE, SA_CAR_DEPTH, SA_CAR_START_Z,
 } from '../utils/constants';
 
 /**
@@ -26,8 +26,8 @@ export class TrainBodyAhead {
     const couplingMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 });
     const detailMat = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: 0.6, metalness: 0.4 });
 
-    // Start just past the cabin back wall (+Z side)
-    let carZ = CABIN_DEPTH / 2 + TRAIN_CAR_GAP;
+    // Start just past the SA car (+Z side)
+    let carZ = SA_CAR_START_Z + SA_CAR_DEPTH + TRAIN_CAR_GAP;
 
     for (let c = 0; c < TRAIN_CAR_COUNT; c++) {
       const carGroup = new THREE.Group();

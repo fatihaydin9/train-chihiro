@@ -15,6 +15,7 @@ export interface EventMap {
   'interaction:lantern-toggle': void;
   'train:speed-changed': { fast: boolean };
   'interaction:stove-toggle': void;
+  'interaction:teleport': { x: number; y: number; z: number };
   'stove:state': { on: boolean };
 }
 

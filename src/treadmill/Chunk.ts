@@ -1,25 +1,27 @@
-import * as THREE from 'three';
-import type { BlendedBiomeConfig, FloraSpawnRule } from '../biome/types';
-import type { InstancedVoxelBatch } from '../voxel/InstancedVoxelBatch';
-import type { VoxelRegistry } from '../voxel/VoxelRegistry';
-import { VoxelTerrain } from './VoxelTerrain';
-import { TunnelOverlay } from './TunnelOverlay';
+import * as THREE from "three";
+
 import {
-  CHUNK_WIDTH,
-  CHUNK_DEPTH,
-  GROUND_Y,
-  TRACK_Y,
-  TRACK_GAUGE,
-  TRACK_CLEARANCE,
-  FLORA_NEAR_MIN,
-  FLORA_NEAR_MAX,
-  FLORA_FAR_MIN,
-  FLORA_FAR_MAX,
   BRIDGE_HEIGHT,
-} from '../utils/constants';
+  CHUNK_DEPTH,
+  CHUNK_WIDTH,
+  FLORA_FAR_MAX,
+  FLORA_FAR_MIN,
+  FLORA_NEAR_MAX,
+  FLORA_NEAR_MIN,
+  GROUND_Y,
+  TRACK_CLEARANCE,
+  TRACK_GAUGE,
+  TRACK_Y,
+} from "../utils/constants";
+import type { BlendedBiomeConfig, FloraSpawnRule } from "../biome/types";
+
+import type { InstancedVoxelBatch } from "../voxel/InstancedVoxelBatch";
+import { TunnelOverlay } from "./TunnelOverlay";
+import type { VoxelRegistry } from "../voxel/VoxelRegistry";
+import { VoxelTerrain } from "./VoxelTerrain";
+import { seededRandom } from "../utils/math";
 
 const FLORA_TRACK_CLEARANCE = TRACK_GAUGE / 2 + 3.0;
-import { seededRandom } from '../utils/math';
 
 export class Chunk {
   readonly group = new THREE.Group();
@@ -53,14 +55,22 @@ export class Chunk {
     // Track bed (gravel strip)
     const bedGeo = new THREE.PlaneGeometry(TRACK_GAUGE + 1.0, CHUNK_DEPTH);
     bedGeo.rotateX(-Math.PI / 2);
-    const bedMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.95, metalness: 0.0 });
+    const bedMat = new THREE.MeshStandardMaterial({
+      color: 0x555555,
+      roughness: 0.95,
+      metalness: 0.0,
+    });
     this.trackBed = new THREE.Mesh(bedGeo, bedMat);
     this.trackBed.position.y = TRACK_Y;
     this.group.add(this.trackBed);
 
     // Rails
     const railGeo = new THREE.BoxGeometry(0.07, 0.1, CHUNK_DEPTH);
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.3, metalness: 0.8 });
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0x666666,
+      roughness: 0.3,
+      metalness: 0.8,
+    });
 
     this.trackLeft = new THREE.Mesh(railGeo, railMat);
     this.trackLeft.position.set(-TRACK_GAUGE / 2, TRACK_Y + 0.05, 0);
@@ -75,17 +85,32 @@ export class Chunk {
     return this.currentAmplitude;
   }
 
-  reconfigure(biome: BlendedBiomeConfig, prevAmplitude?: number, nextAmplitude?: number): void {
+  reconfigure(
+    biome: BlendedBiomeConfig,
+    prevAmplitude?: number,
+    nextAmplitude?: number,
+  ): void {
     // Update track color
     const tc = biome.trackColor;
-    (this.trackBed.material as THREE.MeshStandardMaterial).color.setRGB(tc.r, tc.g, tc.b);
+    (this.trackBed.material as THREE.MeshStandardMaterial).color.setRGB(
+      tc.r,
+      tc.g,
+      tc.b,
+    );
 
     // Generate voxel terrain
     this.currentAmplitude = biome.isTunnel ? 0.5 : biome.terrainAmplitude;
     const worldZ = this.group.position.z;
     this.prevAmplitude = prevAmplitude;
     this.nextAmplitude = nextAmplitude;
-    this.terrain.generate(worldZ, this.currentAmplitude, biome.groundColor, biome.groundColorAlt, prevAmplitude, nextAmplitude);
+    this.terrain.generate(
+      worldZ,
+      this.currentAmplitude,
+      biome.groundColor,
+      biome.groundColorAlt,
+      prevAmplitude,
+      nextAmplitude,
+    );
 
     // Tunnel overlay
     if (biome.isTunnel) {
@@ -102,12 +127,30 @@ export class Chunk {
     }
     this.floraBatches = [];
 
-    // Remove old river/bridge
+    // Remove old river/bridge (dispose geometries + materials to prevent leak)
     if (this.riverGroup) {
+      this.riverGroup.traverse((obj) => {
+        const m = obj as THREE.Mesh;
+        if (m.geometry) m.geometry.dispose();
+        if (m.material) {
+          if (Array.isArray(m.material))
+            m.material.forEach((mt) => mt.dispose());
+          else (m.material as THREE.Material).dispose();
+        }
+      });
       this.group.remove(this.riverGroup);
       this.riverGroup = null;
     }
     if (this.bridgeGroup) {
+      this.bridgeGroup.traverse((obj) => {
+        const m = obj as THREE.Mesh;
+        if (m.geometry) m.geometry.dispose();
+        if (m.material) {
+          if (Array.isArray(m.material))
+            m.material.forEach((mt) => mt.dispose());
+          else (m.material as THREE.Material).dispose();
+        }
+      });
       this.group.remove(this.bridgeGroup);
       this.bridgeGroup = null;
     }
@@ -117,8 +160,18 @@ export class Chunk {
     const rng = seededRandom(this.seed);
 
     // Spawn flora in all biomes (including cave tunnels for stalactites etc.)
-    this.spawnFloraByBand(biome.floraDistribution.near, rng, FLORA_NEAR_MIN, FLORA_NEAR_MAX);
-    this.spawnFloraByBand(biome.floraDistribution.far, rng, FLORA_FAR_MIN, FLORA_FAR_MAX);
+    this.spawnFloraByBand(
+      biome.floraDistribution.near,
+      rng,
+      FLORA_NEAR_MIN,
+      FLORA_NEAR_MAX,
+    );
+    this.spawnFloraByBand(
+      biome.floraDistribution.far,
+      rng,
+      FLORA_FAR_MIN,
+      FLORA_FAR_MAX,
+    );
 
     if (!biome.isTunnel) {
       // Maybe generate river (not inside tunnels)
@@ -131,7 +184,17 @@ export class Chunk {
    */
   private sampleTerrainHeight(localX: number, localZ: number): number {
     const worldZ = this.group.position.z;
-    return GROUND_Y + this.terrain.sampleHeight(localX, localZ, worldZ, this.currentAmplitude, this.prevAmplitude, this.nextAmplitude);
+    return (
+      GROUND_Y +
+      this.terrain.sampleHeight(
+        localX,
+        localZ,
+        worldZ,
+        this.currentAmplitude,
+        this.prevAmplitude,
+        this.nextAmplitude,
+      )
+    );
   }
 
   /**
@@ -167,6 +230,7 @@ export class Chunk {
         dummy.updateMatrix();
         batch.setTransform(i, dummy.matrix);
       }
+      batch.flush();
 
       batch.mesh.position.set(0, 0, 0);
       batch.mesh.castShadow = true;
@@ -178,7 +242,10 @@ export class Chunk {
   /**
    * Maybe generate a river crossing with a bridge over the track.
    */
-  private maybeGenerateRiver(biome: BlendedBiomeConfig, rng: () => number): void {
+  private maybeGenerateRiver(
+    biome: BlendedBiomeConfig,
+    rng: () => number,
+  ): void {
     if (rng() > biome.riverProbability) return;
 
     const riverZ = (rng() - 0.5) * CHUNK_DEPTH * 0.6;
@@ -187,7 +254,13 @@ export class Chunk {
 
     // River: blue voxel blocks at depressed Y, crossing perpendicular to track
     this.riverGroup = new THREE.Group();
-    const waterMat = new THREE.MeshStandardMaterial({ color: 0x3366aa, transparent: true, opacity: 0.7, roughness: 0.2, metalness: 0.1 });
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x3366aa,
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.2,
+      metalness: 0.1,
+    });
 
     // River on both sides of the track
     for (const side of [-1, 1]) {
@@ -206,8 +279,16 @@ export class Chunk {
 
     // Bridge over track zone
     this.bridgeGroup = new THREE.Group();
-    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x6b5030, roughness: 0.9, metalness: 0.0 });
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x5a4020, roughness: 0.9, metalness: 0.0 });
+    const bridgeMat = new THREE.MeshStandardMaterial({
+      color: 0x6b5030,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    const postMat = new THREE.MeshStandardMaterial({
+      color: 0x5a4020,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
 
     // Deck
     const deck = new THREE.Mesh(
@@ -239,11 +320,7 @@ export class Chunk {
         new THREE.BoxGeometry(0.05, 0.05, riverWidth + 1.5),
         postMat,
       );
-      railing.position.set(
-        sx * (TRACK_GAUGE / 2 + 0.8),
-        TRACK_Y + 0.5,
-        riverZ,
-      );
+      railing.position.set(sx * (TRACK_GAUGE / 2 + 0.8), TRACK_Y + 0.5, riverZ);
       this.bridgeGroup.add(railing);
     }
 

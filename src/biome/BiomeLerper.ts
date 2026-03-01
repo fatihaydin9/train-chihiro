@@ -38,6 +38,7 @@ export class BiomeLerper {
       riverProbability: lerp(from.riverProbability, to.riverProbability, s),
       structureDensity: lerp(from.structureDensity, to.structureDensity, s),
       dayNightInfluence: lerp(from.dayNightInfluence, to.dayNightInfluence, s),
+      cloudCoverage: lerp(from.cloudCoverage, to.cloudCoverage, s),
 
       transitionProgress: t,
       fromBiome: from.name,

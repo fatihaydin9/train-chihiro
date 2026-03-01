@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export class InstancedVoxelBatch {
   readonly mesh: THREE.InstancedMesh;
@@ -15,6 +15,9 @@ export class InstancedVoxelBatch {
 
   setTransform(index: number, matrix: THREE.Matrix4): void {
     this.mesh.setMatrixAt(index, matrix);
+  }
+
+  flush(): void {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 

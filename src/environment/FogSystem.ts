@@ -54,9 +54,9 @@ export class FogSystem implements Updatable {
 
     // Darken fog color at night
     const nightFogColor = new THREE.Color(
-      this.biomeFogColor.r * 0.2,
-      this.biomeFogColor.g * 0.2,
-      this.biomeFogColor.b * 0.25,
+      this.biomeFogColor.r * 0.08,
+      this.biomeFogColor.g * 0.08,
+      this.biomeFogColor.b * 0.1,
     );
     this.fog.color.lerpColors(nightFogColor, this.biomeFogColor, dayFactor);
 

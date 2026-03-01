@@ -1,15 +1,17 @@
-import * as THREE from 'three';
-import type { Updatable } from '../core/GameLoop';
-import type { EventBus } from '../core/EventBus';
-import { ChunkPool } from './ChunkPool';
-import type { VoxelRegistry } from '../voxel/VoxelRegistry';
-import type { BlendedBiomeConfig } from '../biome/types';
-import { CHUNK_DEPTH, CHUNK_COUNT, WORLD_SPEED } from '../utils/constants';
+import * as THREE from "three";
+
+import { CHUNK_COUNT, CHUNK_DEPTH, WORLD_SPEED } from "../utils/constants";
+
+import type { BlendedBiomeConfig } from "../biome/types";
+import { ChunkPool } from "./ChunkPool";
+import type { EventBus } from "../core/EventBus";
+import type { Updatable } from "../core/GameLoop";
+import type { VoxelRegistry } from "../voxel/VoxelRegistry";
 
 export class TreadmillSystem implements Updatable {
   private pool: ChunkPool;
   private currentBiome: BlendedBiomeConfig | null = null;
-  private speed = WORLD_SPEED * 0.35;
+  private speed = WORLD_SPEED * 0.55;
 
   constructor(
     private scene: THREE.Scene,
@@ -27,13 +29,13 @@ export class TreadmillSystem implements Updatable {
     }
 
     // Subscribe to biome transitions
-    this.eventBus.on('biome:transition-tick', (config) => {
+    this.eventBus.on("biome:transition-tick", (config) => {
       this.currentBiome = config;
     });
 
     // Speed toggle
-    this.eventBus.on('train:speed-changed', ({ fast }) => {
-      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.35;
+    this.eventBus.on("train:speed-changed", ({ fast }) => {
+      this.speed = fast ? WORLD_SPEED : WORLD_SPEED * 0.55;
     });
   }
 
@@ -50,10 +52,12 @@ export class TreadmillSystem implements Updatable {
     }
   }
 
-  private recycleChunk(chunk: { group: THREE.Group } & import('./Chunk').Chunk): void {
+  private recycleChunk(
+    chunk: { group: THREE.Group } & import("./Chunk").Chunk,
+  ): void {
     // Find the furthest-back chunk (will become the +Z neighbor of the recycled chunk)
     let minZ = Infinity;
-    let backChunk: import('./Chunk').Chunk | null = null;
+    let backChunk: import("./Chunk").Chunk | null = null;
     for (const c of this.pool.chunks) {
       if (c !== chunk && c.group.position.z < minZ) {
         minZ = c.group.position.z;
@@ -66,11 +70,14 @@ export class TreadmillSystem implements Updatable {
 
     // Find the prev neighbor (-Z direction, further from player)
     // After repositioning, find the chunk that sits at newZ - CHUNK_DEPTH
-    let prevChunk: import('./Chunk').Chunk | null = null;
-    let nextChunk: import('./Chunk').Chunk | null = backChunk; // backChunk is at minZ = newZ + CHUNK_DEPTH
+    let prevChunk: import("./Chunk").Chunk | null = null;
+    let nextChunk: import("./Chunk").Chunk | null = backChunk; // backChunk is at minZ = newZ + CHUNK_DEPTH
     const tolerance = CHUNK_DEPTH * 0.5;
     for (const c of this.pool.chunks) {
-      if (c !== chunk && Math.abs(c.group.position.z - (newZ - CHUNK_DEPTH)) < tolerance) {
+      if (
+        c !== chunk &&
+        Math.abs(c.group.position.z - (newZ - CHUNK_DEPTH)) < tolerance
+      ) {
         prevChunk = c;
         break;
       }

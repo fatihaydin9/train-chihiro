@@ -4,7 +4,7 @@ import { BIOME_DEFINITIONS, BIOME_ORDER } from './BiomeData';
 import { BiomeLerper } from './BiomeLerper';
 import { BIOME_TRANSITION_DURATION, DAY_CYCLE_DURATION } from '../utils/constants';
 
-const OCEAN_DURATION = 120; // ocean biome: 2 minutes (shorter crossing)
+const OCEAN_DURATION = DAY_CYCLE_DURATION; // ocean biome: full day/night cycle
 
 export class BiomeController implements Updatable {
   private currentIndex: number;

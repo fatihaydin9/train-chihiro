@@ -3,17 +3,17 @@ export interface ParticleConfig {
   size: number;
   color: number;
   opacity: number;
-  speed: number;         // fall speed
-  spread: number;        // horizontal spread
-  height: number;        // emitter height
-  drift: number;         // horizontal drift factor
+  speed: number; // fall speed
+  spread: number; // horizontal spread
+  height: number; // emitter height
+  drift: number; // horizontal drift factor
   sizeAttenuation: boolean;
-  rises?: boolean;       // true = particles float upward (e.g. bubbles)
+  rises?: boolean; // true = particles float upward (e.g. bubbles)
 }
 
 export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
   snow: {
-    count: 10000,
+    count: 6000,
     size: 0.1,
     color: 0xddeeff,
     opacity: 0.6,
@@ -24,7 +24,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   rain: {
-    count: 15000,
+    count: 8000,
     size: 0.35,
     color: 0xcccccc,
     opacity: 1.0,
@@ -35,7 +35,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   leaves: {
-    count: 2000,
+    count: 3500,
     size: 0.12,
     color: 0xcc6622,
     opacity: 0.85,
@@ -46,7 +46,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   smog: {
-    count: 3000,
+    count: 4000,
     size: 0.25,
     color: 0x887766,
     opacity: 0.3,
@@ -57,7 +57,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   ash: {
-    count: 2500,
+    count: 3500,
     size: 0.06,
     color: 0x999999,
     opacity: 0.5,
@@ -68,7 +68,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   blizzard: {
-    count: 18000,
+    count: 10000,
     size: 0.1,
     color: 0xccddee,
     opacity: 0.55,
@@ -79,7 +79,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   drizzle: {
-    count: 10000,
+    count: 6000,
     size: 0.35,
     color: 0xbbbbbb,
     opacity: 0.7,
@@ -90,7 +90,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   petals: {
-    count: 1500,
+    count: 2500,
     size: 0.1,
     color: 0xffbbdd,
     opacity: 0.8,
@@ -112,7 +112,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   storm: {
-    count: 18000,
+    count: 10000,
     size: 0.38,
     color: 0xaaaaaa,
     opacity: 0.85,
@@ -123,7 +123,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   frost: {
-    count: 3000,
+    count: 4000,
     size: 0.15,
     color: 0xddeeff,
     opacity: 0.6,
@@ -134,7 +134,7 @@ export const WEATHER_CONFIGS: Record<string, ParticleConfig> = {
     sizeAttenuation: true,
   },
   bubbles: {
-    count: 2000,
+    count: 3000,
     size: 0.1,
     color: 0x88ddff,
     opacity: 0.5,

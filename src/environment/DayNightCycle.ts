@@ -15,8 +15,8 @@ export class DayNightCycle implements Updatable {
     this.timeOfDay += dt / DAY_CYCLE_DURATION;
     if (this.timeOfDay >= 1) this.timeOfDay -= 1;
 
-    // Daytime from 0.20 (dawn start) to 0.80 (dusk end) — 60% of cycle
-    const isDaytime = this.timeOfDay > 0.20 && this.timeOfDay < 0.80;
+    // Daytime from 0.21 (dawn start) to 0.79 (dusk end)
+    const isDaytime = this.timeOfDay > 0.21 && this.timeOfDay < 0.79;
 
     this.eventBus.emit('daytime:tick', {
       timeOfDay: this.timeOfDay,

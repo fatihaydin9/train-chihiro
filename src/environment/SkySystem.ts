@@ -1,8 +1,10 @@
-import * as THREE from 'three';
-import type { Updatable } from '../core/GameLoop';
-import type { EventBus } from '../core/EventBus';
-import type { BiomeColorConfig } from '../biome/types';
-import { lerp, smoothstep } from '../utils/math';
+import * as THREE from "three";
+
+import { lerp, smoothstep } from "../utils/math";
+
+import type { BiomeColorConfig } from "../biome/types";
+import type { EventBus } from "../core/EventBus";
+import type { Updatable } from "../core/GameLoop";
 
 /**
  * Procedural sky dome with gradient, sun, moon, and stars.
@@ -23,20 +25,35 @@ export class SkySystem implements Updatable {
   private aurora: THREE.Mesh;
   private auroraIntensity = 0;
 
-  // Day/night palette
-  private static readonly NIGHT_ZENITH = new THREE.Color(0.01, 0.02, 0.07);
-  private static readonly NIGHT_HORIZON = new THREE.Color(0.02, 0.04, 0.10);
-  private static readonly DAWN_HORIZON = new THREE.Color(0.90, 0.55, 0.25);
-  private static readonly DAWN_ZENITH = new THREE.Color(0.20, 0.30, 0.50);
-  private static readonly DUSK_HORIZON = new THREE.Color(0.80, 0.40, 0.20);
-  private static readonly DUSK_ZENITH = new THREE.Color(0.15, 0.22, 0.40);
+  // Cached per-frame work colors (avoid GC pressure)
+  private readonly _zenith = new THREE.Color();
+  private readonly _horizon = new THREE.Color();
 
-  constructor(scene: THREE.Scene, private eventBus: EventBus) {
+  // Day/night palette
+  private static readonly NIGHT_ZENITH = new THREE.Color(0.005, 0.007, 0.025);
+  private static readonly NIGHT_HORIZON = new THREE.Color(0.01, 0.015, 0.04);
+  private static readonly DAWN_HORIZON = new THREE.Color(0.9, 0.55, 0.25);
+  private static readonly DAWN_ZENITH = new THREE.Color(0.2, 0.3, 0.5);
+  private static readonly DUSK_HORIZON = new THREE.Color(0.8, 0.4, 0.2);
+  private static readonly DUSK_ZENITH = new THREE.Color(0.15, 0.22, 0.4);
+
+  constructor(
+    scene: THREE.Scene,
+    private eventBus: EventBus,
+  ) {
     this.scene = scene;
     this.scene.background = null; // Dome is the background
 
     // === Sky dome: upper hemisphere ===
-    const domeGeo = new THREE.SphereGeometry(300, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeGeo = new THREE.SphereGeometry(
+      300,
+      32,
+      16,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2,
+    );
     const domeMat = new THREE.MeshBasicMaterial({
       vertexColors: true,
       side: THREE.BackSide,
@@ -46,7 +63,7 @@ export class SkySystem implements Updatable {
     // Initialize vertex colors
     const positions = domeGeo.attributes.position;
     const colors = new Float32Array(positions.count * 3);
-    domeGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    domeGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
     this.dome = new THREE.Mesh(domeGeo, domeMat);
     this.dome.position.y = -5; // Slight offset so horizon aligns
@@ -64,7 +81,10 @@ export class SkySystem implements Updatable {
       starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
     }
     const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(starPositions, 3),
+    );
     const starMat = new THREE.PointsMaterial({
       color: 0xffffff,
       size: 1.5,
@@ -83,7 +103,10 @@ export class SkySystem implements Updatable {
 
     // === Moon ===
     const moonGeo = new THREE.SphereGeometry(5, 12, 6);
-    const moonMat = new THREE.MeshBasicMaterial({ color: 0xccccdd, fog: false });
+    const moonMat = new THREE.MeshBasicMaterial({
+      color: 0xccccdd,
+      fog: false,
+    });
     this.moon = new THREE.Mesh(moonGeo, moonMat);
     scene.add(this.moon);
 
@@ -133,8 +156,12 @@ export class SkySystem implements Updatable {
     scene.add(this.aurora);
 
     // Subscribe to events
-    this.eventBus.on('biome:transition-tick', (config) => {
-      this.biomeSky.setRGB(config.skyColor.r, config.skyColor.g, config.skyColor.b);
+    this.eventBus.on("biome:transition-tick", (config) => {
+      this.biomeSky.setRGB(
+        config.skyColor.r,
+        config.skyColor.g,
+        config.skyColor.b,
+      );
       this.biomeHorizon.setRGB(
         config.skyColorHorizon.r,
         config.skyColorHorizon.g,
@@ -143,11 +170,12 @@ export class SkySystem implements Updatable {
       this.dayNightInfluence = config.dayNightInfluence;
       // Aurora for polar biomes
       const name = config.name;
-      const isPolar = name === 'polar' || name === 'arctic_coast' || name === 'frozen_waste';
+      const isPolar =
+        name === "polar" || name === "arctic_coast" || name === "frozen_waste";
       this.auroraIntensity = isPolar ? 1.0 : 0;
     });
 
-    this.eventBus.on('daytime:tick', (data) => {
+    this.eventBus.on("daytime:tick", (data) => {
       this.timeOfDay = data.timeOfDay;
     });
 
@@ -164,7 +192,7 @@ export class SkySystem implements Updatable {
 
   private updateAurora(elapsed: number): void {
     // Aurora only visible at night in polar biomes
-    const isNight = this.timeOfDay < 0.25 || this.timeOfDay > 0.75;
+    const isNight = this.timeOfDay < 0.23 || this.timeOfDay > 0.77;
     const target = isNight ? this.auroraIntensity : 0;
     const mat = this.aurora.material as THREE.ShaderMaterial;
     const cur = mat.uniforms.uOpacity.value;
@@ -178,38 +206,38 @@ export class SkySystem implements Updatable {
     const influence = this.dayNightInfluence;
 
     // Determine zenith and horizon colors based on time of day
-    const zenith = new THREE.Color();
-    const horizon = new THREE.Color();
+    const zenith = this._zenith;
+    const horizon = this._horizon;
 
-    // Wider transitions for a slower, more cinematic sunrise/sunset
-    // 0.00–0.20: Night | 0.20–0.32: Dawn | 0.32–0.40: Dawn→Day
-    // 0.40–0.60: Day  | 0.60–0.68: Day→Dusk | 0.68–0.80: Dusk→Night | 0.80–1.0: Night
-    if (t < 0.20) {
+    // 3 min day, 3 min night, 1 min transitions (30s dawn + 30s dusk)
+    // 0.00–0.21: Night | 0.21–0.25: Dawn | 0.25–0.29: Dawn→Day
+    // 0.29–0.71: Day   | 0.71–0.75: Day→Dusk | 0.75–0.79: Dusk→Night | 0.79–1.0: Night
+    if (t < 0.21) {
       // Deep night
       zenith.copy(SkySystem.NIGHT_ZENITH);
       horizon.copy(SkySystem.NIGHT_HORIZON);
-    } else if (t < 0.32) {
-      // Dawn transition (12% of cycle ≈ 29s at 240s)
-      const dt = smoothstep(0, 1, (t - 0.20) / 0.12);
+    } else if (t < 0.25) {
+      // Dawn transition
+      const dt = smoothstep(0, 1, (t - 0.21) / 0.04);
       zenith.lerpColors(SkySystem.NIGHT_ZENITH, SkySystem.DAWN_ZENITH, dt);
       horizon.lerpColors(SkySystem.NIGHT_HORIZON, SkySystem.DAWN_HORIZON, dt);
-    } else if (t < 0.40) {
-      // Dawn to day (8% ≈ 19s)
-      const dt = smoothstep(0, 1, (t - 0.32) / 0.08);
+    } else if (t < 0.29) {
+      // Dawn to day
+      const dt = smoothstep(0, 1, (t - 0.25) / 0.04);
       zenith.lerpColors(SkySystem.DAWN_ZENITH, this.biomeSky, dt);
       horizon.lerpColors(SkySystem.DAWN_HORIZON, this.biomeHorizon, dt);
-    } else if (t < 0.60) {
+    } else if (t < 0.71) {
       // Full day
       zenith.copy(this.biomeSky);
       horizon.copy(this.biomeHorizon);
-    } else if (t < 0.68) {
-      // Day to dusk (8% ≈ 19s)
-      const dt = smoothstep(0, 1, (t - 0.60) / 0.08);
+    } else if (t < 0.75) {
+      // Day to dusk
+      const dt = smoothstep(0, 1, (t - 0.71) / 0.04);
       zenith.lerpColors(this.biomeSky, SkySystem.DUSK_ZENITH, dt);
       horizon.lerpColors(this.biomeHorizon, SkySystem.DUSK_HORIZON, dt);
-    } else if (t < 0.80) {
-      // Dusk to night (12% ≈ 29s)
-      const dt = smoothstep(0, 1, (t - 0.68) / 0.12);
+    } else if (t < 0.79) {
+      // Dusk to night
+      const dt = smoothstep(0, 1, (t - 0.75) / 0.04);
       zenith.lerpColors(SkySystem.DUSK_ZENITH, SkySystem.NIGHT_ZENITH, dt);
       horizon.lerpColors(SkySystem.DUSK_HORIZON, SkySystem.NIGHT_HORIZON, dt);
     } else {
@@ -252,9 +280,8 @@ export class SkySystem implements Updatable {
 
     // Eased Y: pow(sin, 0.7) — gentler easing for smooth rise/set
     const rawSin = Math.sin(angle);
-    const easedSin = rawSin >= 0
-      ? Math.pow(rawSin, 0.7)
-      : -Math.pow(-rawSin, 0.7);
+    const easedSin =
+      rawSin >= 0 ? Math.pow(rawSin, 0.7) : -Math.pow(-rawSin, 0.7);
 
     const sunX = Math.cos(angle) * r * 0.3;
     const sunY = Math.max(easedSin * r * yScale, -50);
@@ -266,18 +293,13 @@ export class SkySystem implements Updatable {
     const sunMat = this.sun.material as THREE.MeshBasicMaterial;
     const maxY = r * yScale;
     const elevation = Math.max(0, sunY / maxY);
-    sunMat.color.setRGB(
-      1.0,
-      0.6 + elevation * 0.35,
-      0.2 + elevation * 0.35,
-    );
+    sunMat.color.setRGB(1.0, 0.6 + elevation * 0.35, 0.2 + elevation * 0.35);
 
     // Moon: opposite the sun, same eased curve
     const moonAngle = angle + Math.PI;
     const rawMoonSin = Math.sin(moonAngle);
-    const easedMoonSin = rawMoonSin >= 0
-      ? Math.pow(rawMoonSin, 0.7)
-      : -Math.pow(-rawMoonSin, 0.7);
+    const easedMoonSin =
+      rawMoonSin >= 0 ? Math.pow(rawMoonSin, 0.7) : -Math.pow(-rawMoonSin, 0.7);
 
     const moonX = Math.cos(moonAngle) * r * 0.3;
     const moonY = Math.max(easedMoonSin * r * yScale, -50);
@@ -289,19 +311,19 @@ export class SkySystem implements Updatable {
   private updateStars(): void {
     const mat = this.stars.material as THREE.PointsMaterial;
 
-    // Stars fade in at night, matching wider transition windows
+    // Stars fade in at night, matching transition windows
     let starOpacity = 0;
-    if (this.timeOfDay < 0.20) {
+    if (this.timeOfDay < 0.21) {
       starOpacity = 1;
-    } else if (this.timeOfDay < 0.32) {
+    } else if (this.timeOfDay < 0.29) {
       // Fade out during dawn
-      starOpacity = 1 - smoothstep(0, 1, (this.timeOfDay - 0.20) / 0.12);
-    } else if (this.timeOfDay > 0.80) {
+      starOpacity = 1 - smoothstep(0, 1, (this.timeOfDay - 0.21) / 0.08);
+    } else if (this.timeOfDay > 0.79) {
       // Full night
       starOpacity = 1;
-    } else if (this.timeOfDay > 0.68) {
+    } else if (this.timeOfDay > 0.71) {
       // Fade in during dusk
-      starOpacity = smoothstep(0, 1, (this.timeOfDay - 0.68) / 0.12);
+      starOpacity = smoothstep(0, 1, (this.timeOfDay - 0.71) / 0.08);
     }
 
     // Tunnel influence dims stars

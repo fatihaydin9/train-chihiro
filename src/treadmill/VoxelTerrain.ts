@@ -1,12 +1,19 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+
 import {
-  CHUNK_WIDTH, CHUNK_DEPTH, TRACK_CLEARANCE,
-  TERRAIN_FREQUENCY, TERRAIN_OCTAVES, TERRAIN_LACUNARITY,
-  TERRAIN_PERSISTENCE, TERRAIN_NOISE_SEED,
-  TERRAIN_SEGMENTS_X, TERRAIN_SEGMENTS_Z,
-} from '../utils/constants';
-import { smoothstep, lerp } from '../utils/math';
-import { SimplexNoise2D, fbm2D } from '../utils/noise';
+  CHUNK_DEPTH,
+  CHUNK_WIDTH,
+  TERRAIN_FREQUENCY,
+  TERRAIN_LACUNARITY,
+  TERRAIN_NOISE_SEED,
+  TERRAIN_OCTAVES,
+  TERRAIN_PERSISTENCE,
+  TERRAIN_SEGMENTS_X,
+  TERRAIN_SEGMENTS_Z,
+  TRACK_CLEARANCE,
+} from "../utils/constants";
+import { SimplexNoise2D, fbm2D } from "../utils/noise";
+import { lerp, smoothstep } from "../utils/math";
 
 const terrainNoise = new SimplexNoise2D(TERRAIN_NOISE_SEED);
 const colorNoise = new SimplexNoise2D(TERRAIN_NOISE_SEED + 7);
@@ -69,8 +76,12 @@ function computeHeight(
   const wx = localX * TERRAIN_FREQUENCY;
   const wz = (localZ + worldZ) * TERRAIN_FREQUENCY;
   const noiseVal = fbm2D(
-    terrainNoise, wx, wz,
-    TERRAIN_OCTAVES, TERRAIN_LACUNARITY, TERRAIN_PERSISTENCE,
+    terrainNoise,
+    wx,
+    wz,
+    TERRAIN_OCTAVES,
+    TERRAIN_LACUNARITY,
+    TERRAIN_PERSISTENCE,
   );
 
   const profile = xProfile(Math.abs(localX));
@@ -90,10 +101,24 @@ export class VoxelTerrain {
   private material: THREE.MeshStandardMaterial;
   private skirtGeometry: THREE.BufferGeometry;
 
+  // Pre-allocated height grid with 1-cell padding for finite-difference normals.
+  // Grid dimensions: (TERRAIN_SEGMENTS_X + 3) * (TERRAIN_SEGMENTS_Z + 3)
+  // Padding allows looking up neighbours without bounds checks.
+  private readonly gridCols = TERRAIN_SEGMENTS_X + 3;
+  private readonly gridRows = TERRAIN_SEGMENTS_Z + 3;
+  private readonly heightGrid: Float32Array;
+
+  // Pre-allocated skirt buffers (reused across reconfigure calls)
+  private skirtPos: Float32Array;
+  private skirtCol: Float32Array;
+  private skirtIdx: number[] | null = null;
+
   constructor() {
     this.geometry = new THREE.PlaneGeometry(
-      CHUNK_WIDTH, CHUNK_DEPTH,
-      TERRAIN_SEGMENTS_X, TERRAIN_SEGMENTS_Z,
+      CHUNK_WIDTH,
+      CHUNK_DEPTH,
+      TERRAIN_SEGMENTS_X,
+      TERRAIN_SEGMENTS_Z,
     );
     this.geometry.rotateX(-Math.PI / 2);
 
@@ -103,10 +128,10 @@ export class VoxelTerrain {
     const newIndices: number[] = [];
     for (let iz = 0; iz < TERRAIN_SEGMENTS_Z; iz++) {
       for (let ix = 0; ix < TERRAIN_SEGMENTS_X; ix++) {
-        const a = ix + cols * iz;             // top-left
-        const b = ix + cols * (iz + 1);       // bottom-left
-        const c = (ix + 1) + cols * (iz + 1); // bottom-right
-        const d = (ix + 1) + cols * iz;       // top-right
+        const a = ix + cols * iz; // top-left
+        const b = ix + cols * (iz + 1); // bottom-left
+        const c = ix + 1 + cols * (iz + 1); // bottom-right
+        const d = ix + 1 + cols * iz; // top-right
         if ((ix + iz) % 2 === 0) {
           newIndices.push(a, b, c, a, c, d);
         } else {
@@ -125,7 +150,7 @@ export class VoxelTerrain {
 
     const vertexCount = this.geometry.attributes.position.count;
     const colors = new Float32Array(vertexCount * 3);
-    this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    this.geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.receiveShadow = true;
@@ -136,6 +161,16 @@ export class VoxelTerrain {
     this.skirtMesh = new THREE.Mesh(this.skirtGeometry, this.material);
     this.skirtMesh.receiveShadow = true;
     this.skirtMesh.castShadow = false;
+
+    // Pre-allocate height grid
+    this.heightGrid = new Float32Array(this.gridCols * this.gridRows);
+
+    // Pre-allocate skirt buffers (size known at construction)
+    const skirtRows = TERRAIN_SEGMENTS_Z + 1;
+    const skirtCols = TERRAIN_SEGMENTS_X + 1;
+    const totalEdgeVerts = (skirtRows + skirtRows + skirtCols + skirtCols) * 2;
+    this.skirtPos = new Float32Array(totalEdgeVerts * 3);
+    this.skirtCol = new Float32Array(totalEdgeVerts * 3);
   }
 
   generate(
@@ -148,46 +183,83 @@ export class VoxelTerrain {
   ): void {
     const positions = this.geometry.attributes.position;
     const colors = this.geometry.attributes.color;
+    const normals = this.geometry.attributes.normal;
     const pAmp = prevAmplitude ?? amplitude;
     const nAmp = nextAmplitude ?? amplitude;
 
-    // Small offset for finite-difference normal computation
-    const eps = 0.5;
-    const normals = this.geometry.attributes.normal;
+    const segX = TERRAIN_SEGMENTS_X;
+    const segZ = TERRAIN_SEGMENTS_Z;
+    const vertCols = segX + 1;
+    const gCols = this.gridCols;
 
-    for (let i = 0; i < positions.count; i++) {
-      const localX = positions.getX(i);
-      const localZ = positions.getZ(i);
+    // Step sizes in world space
+    const dx = CHUNK_WIDTH / segX;
+    const dz = CHUNK_DEPTH / segZ;
+    const startX = -HALF_WIDTH - dx; // one cell padding
+    const startZ = -HALF_DEPTH - dz;
 
-      const height = computeHeight(localX, localZ, worldZ, amplitude, pAmp, nAmp);
-      positions.setY(i, height);
+    // Fill height grid (includes 1-cell padding on all sides for normal computation)
+    for (let gz = 0; gz < this.gridRows; gz++) {
+      const lz = startZ + gz * dz;
+      for (let gx = 0; gx < gCols; gx++) {
+        const lx = startX + gx * dx;
+        this.heightGrid[gz * gCols + gx] = computeHeight(
+          lx,
+          lz,
+          worldZ,
+          amplitude,
+          pAmp,
+          nAmp,
+        );
+      }
+    }
 
-      // Compute smooth normal via finite differences (triangulation-independent)
-      const hL = computeHeight(localX - eps, localZ, worldZ, amplitude, pAmp, nAmp);
-      const hR = computeHeight(localX + eps, localZ, worldZ, amplitude, pAmp, nAmp);
-      const hB = computeHeight(localX, localZ - eps, worldZ, amplitude, pAmp, nAmp);
-      const hF = computeHeight(localX, localZ + eps, worldZ, amplitude, pAmp, nAmp);
-      const nx = hL - hR;
-      const nz = hB - hF;
-      const ny = 2.0 * eps;
-      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
-      normals.setXYZ(i, nx / len, ny / len, nz / len);
+    // Assign heights, normals, and colors from the pre-computed grid
+    // Grid offset: vertex (ix, iz) maps to grid cell (ix+1, iz+1) due to padding
+    for (let iz = 0; iz <= segZ; iz++) {
+      for (let ix = 0; ix <= segX; ix++) {
+        const vi = iz * vertCols + ix;
+        const gi = (iz + 1) * gCols + (ix + 1);
 
-      // Vertex color
-      const wx = localX * TERRAIN_FREQUENCY;
-      const wz = (localZ + worldZ) * TERRAIN_FREQUENCY;
-      const noiseVal = fbm2D(
-        terrainNoise, wx, wz,
-        TERRAIN_OCTAVES, TERRAIN_LACUNARITY, TERRAIN_PERSISTENCE,
-      );
-      const heightT = Math.max(0, noiseVal) * 0.5 + 0.25;
-      const variation = colorNoise.noise2D(localX * 0.15, (localZ + worldZ) * 0.15) * 0.05;
-      colors.setXYZ(
-        i,
-        baseColor.r + (altColor.r - baseColor.r) * heightT + variation,
-        baseColor.g + (altColor.g - baseColor.g) * heightT + variation,
-        baseColor.b + (altColor.b - baseColor.b) * heightT + variation,
-      );
+        const height = this.heightGrid[gi];
+        positions.setY(vi, height);
+
+        // Finite-difference normal from grid neighbours (no extra noise calls)
+        const hL = this.heightGrid[gi - 1];
+        const hR = this.heightGrid[gi + 1];
+        const hB = this.heightGrid[gi - gCols];
+        const hF = this.heightGrid[gi + gCols];
+        const nx = hL - hR;
+        const nz = hB - hF;
+        const ny = 2.0 * dx; // dx ≈ dz, use as eps
+        const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+        normals.setXYZ(vi, nx / len, ny / len, nz / len);
+
+        // Vertex color — reuse height noise value instead of recomputing fbm2D
+        const localX = positions.getX(vi);
+        const localZ = positions.getZ(vi);
+        const wx = localX * TERRAIN_FREQUENCY;
+        const wz = (localZ + worldZ) * TERRAIN_FREQUENCY;
+        // Derive heightT from actual computed height / (profile * amp) approximation
+        // Use a simpler lookup: raw fbm is proportional to height before profile clamping
+        const rawNoise = fbm2D(
+          terrainNoise,
+          wx,
+          wz,
+          TERRAIN_OCTAVES,
+          TERRAIN_LACUNARITY,
+          TERRAIN_PERSISTENCE,
+        );
+        const heightT = Math.max(0, rawNoise) * 0.5 + 0.25;
+        const variation =
+          colorNoise.noise2D(localX * 0.15, (localZ + worldZ) * 0.15) * 0.05;
+        colors.setXYZ(
+          vi,
+          baseColor.r + (altColor.r - baseColor.r) * heightT + variation,
+          baseColor.g + (altColor.g - baseColor.g) * heightT + variation,
+          baseColor.b + (altColor.b - baseColor.b) * heightT + variation,
+        );
+      }
     }
 
     positions.needsUpdate = true;
@@ -201,6 +273,7 @@ export class VoxelTerrain {
   /**
    * Build skirt geometry — vertical strips hanging from each terrain edge
    * down to SKIRT_DROP below surface, hiding the underside of hills.
+   * Reuses pre-allocated buffers to avoid GC pressure.
    */
   private buildSkirt(baseColor: { r: number; g: number; b: number }): void {
     const mainPos = this.geometry.attributes.position;
@@ -222,14 +295,13 @@ export class VoxelTerrain {
       Array.from({ length: cols }, (_, c) => (rows - 1) * cols + c),
     ];
 
-    // Count totals — each segment emits 4 triangles (2 front + 2 back)
-    let totalVerts = 0;
-    for (const ei of edgeIndices) totalVerts += ei.length * 2;
-
-    const sPos = new Float32Array(totalVerts * 3);
-    const sCol = new Float32Array(totalVerts * 3);
-    const sIdx: number[] = [];
+    const sPos = this.skirtPos;
+    const sCol = this.skirtCol;
     let vi = 0;
+
+    // Build index buffer only once (topology never changes)
+    const needIndex = this.skirtIdx === null;
+    const sIdx: number[] = needIndex ? [] : (this.skirtIdx as number[]);
 
     for (const edge of edgeIndices) {
       const baseVi = vi;
@@ -262,27 +334,44 @@ export class VoxelTerrain {
       }
 
       // Emit both windings for each quad so it's visible from either side
-      for (let i = 0; i < edge.length - 1; i++) {
-        const tl = baseVi + i * 2;
-        const bl = baseVi + i * 2 + 1;
-        const tr = baseVi + (i + 1) * 2;
-        const br = baseVi + (i + 1) * 2 + 1;
+      if (needIndex) {
+        for (let i = 0; i < edge.length - 1; i++) {
+          const tl = baseVi + i * 2;
+          const bl = baseVi + i * 2 + 1;
+          const tr = baseVi + (i + 1) * 2;
+          const br = baseVi + (i + 1) * 2 + 1;
 
-        // Winding A
-        sIdx.push(tl, tr, bl, bl, tr, br);
-        // Winding B (reversed)
-        sIdx.push(tl, bl, tr, bl, br, tr);
+          // Winding A
+          sIdx.push(tl, tr, bl, bl, tr, br);
+          // Winding B (reversed)
+          sIdx.push(tl, bl, tr, bl, br, tr);
+        }
       }
     }
 
-    // Dispose old and create new
-    this.skirtGeometry.dispose();
-    this.skirtGeometry = new THREE.BufferGeometry();
-    this.skirtGeometry.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-    this.skirtGeometry.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
-    this.skirtGeometry.setIndex(sIdx);
+    if (needIndex) {
+      this.skirtIdx = sIdx;
+      // First time: create geometry with buffers
+      this.skirtGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(sPos, 3),
+      );
+      this.skirtGeometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(sCol, 3),
+      );
+      this.skirtGeometry.setIndex(sIdx);
+      this.skirtMesh.geometry = this.skirtGeometry;
+    } else {
+      // Subsequent calls: just flag buffers as needing upload
+      (
+        this.skirtGeometry.attributes.position as THREE.BufferAttribute
+      ).needsUpdate = true;
+      (
+        this.skirtGeometry.attributes.color as THREE.BufferAttribute
+      ).needsUpdate = true;
+    }
     this.skirtGeometry.computeVertexNormals();
-    this.skirtMesh.geometry = this.skirtGeometry;
   }
 
   sampleHeight(
@@ -294,7 +383,9 @@ export class VoxelTerrain {
     nextAmplitude?: number,
   ): number {
     return computeHeight(
-      localX, localZ, worldZ,
+      localX,
+      localZ,
+      worldZ,
       amplitude,
       prevAmplitude ?? amplitude,
       nextAmplitude ?? amplitude,

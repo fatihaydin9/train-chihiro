@@ -54,6 +54,9 @@ export interface BiomeConfig {
 
   // Day/night influence: 0 = ignore (tunnels), 1 = full
   dayNightInfluence: number;
+
+  // Cloud coverage: 0 = clear sky, 1 = fully overcast
+  cloudCoverage: number;
 }
 
 export type WeatherType = 'snow' | 'rain' | 'leaves' | 'smog' | 'ash' | 'blizzard' | 'drizzle' | 'petals' | 'hail' | 'storm' | 'frost' | 'bubbles' | 'sandstorm' | 'none';

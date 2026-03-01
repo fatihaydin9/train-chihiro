@@ -1,13 +1,19 @@
-import * as THREE from 'three';
-import type { Updatable } from '../core/GameLoop';
-import type { EventBus } from '../core/EventBus';
-import type { WeatherType } from '../biome/types';
+import * as THREE from "three";
+
 import {
-  CABIN_WIDTH, CABIN_HEIGHT, CABIN_DEPTH, CABIN_WALL_THICK, CABIN_FLOOR_Y,
-} from '../utils/constants';
+  CABIN_DEPTH,
+  CABIN_FLOOR_Y,
+  CABIN_HEIGHT,
+  CABIN_WALL_THICK,
+  CABIN_WIDTH,
+} from "../utils/constants";
+
+import type { EventBus } from "../core/EventBus";
+import type { Updatable } from "../core/GameLoop";
+import type { WeatherType } from "../biome/types";
 
 // Frost only in ice biomes (polar, arctic_coast, frozen_waste)
-const ICE_BIOMES = new Set(['polar', 'arctic_coast', 'frozen_waste']);
+const ICE_BIOMES = new Set(["polar", "arctic_coast", "frozen_waste"]);
 
 // How much corner-only condensation each weather type produces (0–1)
 const CONDENSATION_LEVEL: Partial<Record<WeatherType, number>> = {
@@ -42,9 +48,9 @@ interface RainDrop {
 interface Splash {
   x: number;
   y: number;
-  age: number;      // seconds since impact
-  maxAge: number;    // fade-out duration (~0.3s)
-  size: number;      // burst radius
+  age: number; // seconds since impact
+  maxAge: number; // fade-out duration (~0.3s)
+  size: number; // burst radius
 }
 
 /**
@@ -80,10 +86,13 @@ export class WindowEffects implements Updatable {
   private currentRain = 0;
   private targetCondensation = 0;
   private currentCondensation = 0;
-  private currentBiomeName = '';
+  private currentBiomeName = "";
   private stoveOn = false;
 
-  constructor(private scene: THREE.Scene, eventBus: EventBus) {
+  constructor(
+    private scene: THREE.Scene,
+    eventBus: EventBus,
+  ) {
     const halfW = CABIN_WIDTH / 2;
     const wt = CABIN_WALL_THICK;
     const floorY = CABIN_FLOOR_Y;
@@ -97,7 +106,7 @@ export class WindowEffects implements Updatable {
     const winCenterY = floorY + winPadBottom + winH / 2;
 
     // --- Frost texture (512×256, high-res for fine detail) ---
-    this.frostCanvas = document.createElement('canvas');
+    this.frostCanvas = document.createElement("canvas");
     this.frostCanvas.width = 512;
     this.frostCanvas.height = 256;
     this.frostTex = new THREE.CanvasTexture(this.frostCanvas);
@@ -114,7 +123,7 @@ export class WindowEffects implements Updatable {
     });
 
     // --- Condensation texture (corner-only fog for rain) ---
-    this.condensationCanvas = document.createElement('canvas');
+    this.condensationCanvas = document.createElement("canvas");
     this.condensationCanvas.width = 512;
     this.condensationCanvas.height = 256;
     this.condensationTex = new THREE.CanvasTexture(this.condensationCanvas);
@@ -187,7 +196,7 @@ export class WindowEffects implements Updatable {
     this.rainOverlays.push(fwRainMesh);
 
     // Listen to biome transitions
-    eventBus.on('biome:transition-tick', (config) => {
+    eventBus.on("biome:transition-tick", (config) => {
       const wType = config.weatherType;
       const intensity = config.weatherIntensity;
       this.currentBiomeName = config.name;
@@ -205,13 +214,13 @@ export class WindowEffects implements Updatable {
     });
 
     // Stove warmth clears condensation and frost
-    eventBus.on('stove:state', (data) => {
+    eventBus.on("stove:state", (data) => {
       this.stoveOn = data.on;
     });
   }
 
   private createRainPanel() {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 256;
     const tex = new THREE.CanvasTexture(canvas);
@@ -222,32 +231,50 @@ export class WindowEffects implements Updatable {
       depthWrite: false,
       side: THREE.DoubleSide,
     });
-    const panel = { canvas, tex, mat, drops: [] as RainDrop[], splashes: [] as Splash[], spawnAccum: 0 };
+    const panel = {
+      canvas,
+      tex,
+      mat,
+      drops: [] as RainDrop[],
+      splashes: [] as Splash[],
+      spawnAccum: 0,
+    };
     this.rainPanels.push(panel);
     return panel;
   }
 
   private elapsed = 0;
+  private rainDrawAccum = 0;
+  private static readonly RAIN_DRAW_INTERVAL = 1 / 15; // throttle canvas redraws to ~15fps
 
   update(dt: number, _elapsed: number): void {
     this.elapsed += dt;
+    this.rainDrawAccum += dt;
 
     // Faster lerp when decreasing (clearing), slower when building up
     const frostSpeed = (this.targetFrost < this.currentFrost ? 3.0 : 0.8) * dt;
-    const condSpeed = (this.targetCondensation < this.currentCondensation ? 3.0 : 0.8) * dt;
+    const condSpeed =
+      (this.targetCondensation < this.currentCondensation ? 3.0 : 0.8) * dt;
     const rainSpeed = 0.8 * dt;
 
     // Stove warmth suppresses frost and condensation
-    const effectiveFrost = this.stoveOn ? this.targetFrost * 0.1 : this.targetFrost;
-    const effectiveCond = this.stoveOn ? this.targetCondensation * 0.1 : this.targetCondensation;
+    const effectiveFrost = this.stoveOn
+      ? this.targetFrost * 0.1
+      : this.targetFrost;
+    const effectiveCond = this.stoveOn
+      ? this.targetCondensation * 0.1
+      : this.targetCondensation;
 
     this.currentFrost += (effectiveFrost - this.currentFrost) * frostSpeed;
     this.currentRain += (this.targetRain - this.currentRain) * rainSpeed;
-    this.currentCondensation += (effectiveCond - this.currentCondensation) * condSpeed;
+    this.currentCondensation +=
+      (effectiveCond - this.currentCondensation) * condSpeed;
 
     // Snap to zero when very close (prevent lingering)
-    if (effectiveFrost < 0.01 && this.currentFrost < 0.03) this.currentFrost = 0;
-    if (effectiveCond < 0.01 && this.currentCondensation < 0.03) this.currentCondensation = 0;
+    if (effectiveFrost < 0.01 && this.currentFrost < 0.03)
+      this.currentFrost = 0;
+    if (effectiveCond < 0.01 && this.currentCondensation < 0.03)
+      this.currentCondensation = 0;
 
     // Frost (full window ice)
     if (this.currentFrost > 0.01) {
@@ -266,6 +293,9 @@ export class WindowEffects implements Updatable {
     }
 
     // Rain drops + splashes — per panel
+    const shouldRedraw = this.rainDrawAccum >= WindowEffects.RAIN_DRAW_INTERVAL;
+    if (shouldRedraw) this.rainDrawAccum = 0;
+
     for (const panel of this.rainPanels) {
       if (this.currentRain > 0.01) {
         panel.mat.opacity = Math.min(this.currentRain, 0.85);
@@ -273,8 +303,10 @@ export class WindowEffects implements Updatable {
         this.spawnNewDrops(dt, panel);
         this.updateDrops(dt, panel);
         this.updateSplashes(dt, panel);
-        this.drawDrops(panel);
-        panel.tex.needsUpdate = true;
+        if (shouldRedraw) {
+          this.drawDrops(panel);
+          panel.tex.needsUpdate = true;
+        }
       } else {
         panel.mat.visible = false;
         if (panel.drops.length > 0) panel.drops.length = 0;
@@ -288,16 +320,23 @@ export class WindowEffects implements Updatable {
   private drawFrostPattern(): void {
     const w = this.frostCanvas.width;
     const h = this.frostCanvas.height;
-    const ctx = this.frostCanvas.getContext('2d')!;
+    const ctx = this.frostCanvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, w, h);
 
     // Edge gradient
-    const grad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.1, w / 2, h / 2, Math.min(w, h) * 0.55);
-    grad.addColorStop(0, 'rgba(220,235,255,0)');
-    grad.addColorStop(0.45, 'rgba(220,235,255,0.05)');
-    grad.addColorStop(0.7, 'rgba(210,225,250,0.3)');
-    grad.addColorStop(1, 'rgba(200,220,245,0.7)');
+    const grad = ctx.createRadialGradient(
+      w / 2,
+      h / 2,
+      Math.min(w, h) * 0.1,
+      w / 2,
+      h / 2,
+      Math.min(w, h) * 0.55,
+    );
+    grad.addColorStop(0, "rgba(220,235,255,0)");
+    grad.addColorStop(0.45, "rgba(220,235,255,0.05)");
+    grad.addColorStop(0.7, "rgba(210,225,250,0.3)");
+    grad.addColorStop(1, "rgba(200,220,245,0.7)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
@@ -310,7 +349,8 @@ export class WindowEffects implements Updatable {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 0.4) continue;
 
-      const alpha = Math.min(1, (dist - 0.3) * 1.2) * (0.3 + Math.random() * 0.5);
+      const alpha =
+        Math.min(1, (dist - 0.3) * 1.2) * (0.3 + Math.random() * 0.5);
       const size = 0.5 + Math.random() * 2;
       ctx.fillStyle = `rgba(230,240,255,${alpha})`;
       ctx.beginPath();
@@ -319,11 +359,17 @@ export class WindowEffects implements Updatable {
     }
 
     // Frost feather lines from corners
-    ctx.strokeStyle = 'rgba(220,235,255,0.2)';
+    ctx.strokeStyle = "rgba(220,235,255,0.2)";
     ctx.lineWidth = 0.5;
-    for (const [cx, cy] of [[0, 0], [w, 0], [0, h], [w, h]]) {
+    for (const [cx, cy] of [
+      [0, 0],
+      [w, 0],
+      [0, h],
+      [w, h],
+    ]) {
       for (let j = 0; j < 15; j++) {
-        const angle = Math.atan2(h / 2 - cy, w / 2 - cx) + (Math.random() - 0.5) * 1.2;
+        const angle =
+          Math.atan2(h / 2 - cy, w / 2 - cx) + (Math.random() - 0.5) * 1.2;
         const len = 30 + Math.random() * 60;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
@@ -346,17 +392,29 @@ export class WindowEffects implements Updatable {
   private drawCondensationPattern(): void {
     const w = this.condensationCanvas.width;
     const h = this.condensationCanvas.height;
-    const ctx = this.condensationCanvas.getContext('2d')!;
+    const ctx = this.condensationCanvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, w, h);
 
     // Four corner gradients only — center stays clear
-    for (const [cx, cy] of [[0, 0], [w, 0], [0, h], [w, h]]) {
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.4);
-      grad.addColorStop(0, 'rgba(200,215,235,0.5)');
-      grad.addColorStop(0.4, 'rgba(200,215,235,0.2)');
-      grad.addColorStop(0.7, 'rgba(200,215,235,0.05)');
-      grad.addColorStop(1, 'rgba(200,215,235,0)');
+    for (const [cx, cy] of [
+      [0, 0],
+      [w, 0],
+      [0, h],
+      [w, h],
+    ]) {
+      const grad = ctx.createRadialGradient(
+        cx,
+        cy,
+        0,
+        cx,
+        cy,
+        Math.min(w, h) * 0.4,
+      );
+      grad.addColorStop(0, "rgba(200,215,235,0.5)");
+      grad.addColorStop(0.4, "rgba(200,215,235,0.2)");
+      grad.addColorStop(0.7, "rgba(200,215,235,0.05)");
+      grad.addColorStop(1, "rgba(200,215,235,0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
     }
@@ -389,9 +447,7 @@ export class WindowEffects implements Updatable {
     if (Math.random() < 0.4) {
       const edge = Math.random() < 0.5 ? 0 : 1;
       const margin = w * 0.3;
-      return edge === 0
-        ? Math.random() * margin
-        : w - Math.random() * margin;
+      return edge === 0 ? Math.random() * margin : w - Math.random() * margin;
     }
     return Math.random() * w;
   }
@@ -419,7 +475,7 @@ export class WindowEffects implements Updatable {
     };
   }
 
-  private spawnNewDrops(dt: number, panel: typeof this.rainPanels[0]): void {
+  private spawnNewDrops(dt: number, panel: (typeof this.rainPanels)[0]): void {
     const rate = 10 + this.currentRain * 20;
     panel.spawnAccum += rate * dt;
     while (panel.spawnAccum >= 1) {
@@ -440,7 +496,7 @@ export class WindowEffects implements Updatable {
     }
   }
 
-  private updateSplashes(dt: number, panel: typeof this.rainPanels[0]): void {
+  private updateSplashes(dt: number, panel: (typeof this.rainPanels)[0]): void {
     for (let i = panel.splashes.length - 1; i >= 0; i--) {
       panel.splashes[i].age += dt;
       if (panel.splashes[i].age > panel.splashes[i].maxAge) {
@@ -449,7 +505,7 @@ export class WindowEffects implements Updatable {
     }
   }
 
-  private updateDrops(dt: number, panel: typeof this.rainPanels[0]): void {
+  private updateDrops(dt: number, panel: (typeof this.rainPanels)[0]): void {
     const h = panel.canvas.height;
 
     for (let i = panel.drops.length - 1; i >= 0; i--) {
@@ -475,10 +531,10 @@ export class WindowEffects implements Updatable {
     }
   }
 
-  private drawDrops(panel: typeof this.rainPanels[0]): void {
+  private drawDrops(panel: (typeof this.rainPanels)[0]): void {
     const w = panel.canvas.width;
     const h = panel.canvas.height;
-    const ctx = panel.canvas.getContext('2d')!;
+    const ctx = panel.canvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, w, h);
 
@@ -486,7 +542,7 @@ export class WindowEffects implements Updatable {
     for (const s of panel.splashes) {
       const t = s.age / s.maxAge; // 0→1 over lifetime
       const expand = 0.15 + t * 0.85;
-      const alpha = (1 - t * t); // starts at 1.0, fades smoothly
+      const alpha = 1 - t * t; // starts at 1.0, fades smoothly
       const r = s.size * expand;
 
       // Bright white center flash — impact point
@@ -525,7 +581,9 @@ export class WindowEffects implements Updatable {
           ctx.arc(
             s.x + Math.cos(angle) * dist,
             s.y + Math.sin(angle) * dist,
-            dotSize, 0, Math.PI * 2,
+            dotSize,
+            0,
+            Math.PI * 2,
           );
           ctx.fill();
         }
@@ -534,7 +592,8 @@ export class WindowEffects implements Updatable {
 
     // === Drops (dripping down) ===
     for (const d of panel.drops) {
-      const ageFade = 1 - Math.max(0, (d.age - d.maxAge * 0.7)) / (d.maxAge * 0.3);
+      const ageFade =
+        1 - Math.max(0, d.age - d.maxAge * 0.7) / (d.maxAge * 0.3);
       const baseAlpha = Math.min(1, ageFade) * 0.35;
       if (baseAlpha < 0.01) continue;
 

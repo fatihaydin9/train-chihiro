@@ -45,6 +45,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0,
     structureDensity: 0.9,
     dayNightInfluence: 0.2,
+    cloudCoverage: 0.6,
   },
 
   industrial: {
@@ -87,6 +88,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.05,
     structureDensity: 0.7,
     dayNightInfluence: 0.5,
+    cloudCoverage: 0.5,
   },
 
   suburban: {
@@ -132,6 +134,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.1,
     structureDensity: 0.5,
     dayNightInfluence: 0.8,
+    cloudCoverage: 0.3,
   },
 
   village: {
@@ -179,6 +182,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.15,
     structureDensity: 0.4,
     dayNightInfluence: 0.9,
+    cloudCoverage: 0.35,
   },
 
   wilderness: {
@@ -226,6 +230,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.3,
     structureDensity: 0.1,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.4,
   },
 
   tunnel: {
@@ -267,6 +272,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0,
     structureDensity: 0.3,
     dayNightInfluence: 0,
+    cloudCoverage: 0.0,
   },
 
   polar: {
@@ -312,6 +318,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.05,
     structureDensity: 0.1,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.7,
   },
 
   autumn_forest: {
@@ -357,6 +364,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.25,
     structureDensity: 0.15,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.3,
   },
 
   spring_meadow: {
@@ -403,6 +411,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.3,
     structureDensity: 0.3,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.5,
   },
 
   arctic_coast: {
@@ -447,6 +456,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.4,
     structureDensity: 0.1,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.8,
   },
 
   construction: {
@@ -490,6 +500,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.05,
     structureDensity: 0.7,
     dayNightInfluence: 0.6,
+    cloudCoverage: 0.25,
   },
   ocean: {
     name: 'ocean',
@@ -521,7 +532,8 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     neonColors: [],
     riverProbability: 0,
     structureDensity: 0,
-    dayNightInfluence: 0.15,
+    dayNightInfluence: 0.85,
+    cloudCoverage: 0.15,
   },
 
   frozen_waste: {
@@ -567,6 +579,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0,
     structureDensity: 0.1,
     dayNightInfluence: 1.0,
+    cloudCoverage: 0.75,
   },
 
   amazon: {
@@ -613,6 +626,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.4,
     structureDensity: 0.1,
     dayNightInfluence: 0.5,
+    cloudCoverage: 0.85,
   },
 
   thunderstorm: {
@@ -657,6 +671,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.1,
     structureDensity: 0.2,
     dayNightInfluence: 0.3,
+    cloudCoverage: 0.9,
   },
 
   cave: {
@@ -702,6 +717,7 @@ export const BIOME_DEFINITIONS: Record<string, BiomeConfig> = {
     riverProbability: 0.3,
     structureDensity: 0.3,
     dayNightInfluence: 0,
+    cloudCoverage: 0.0,
   },
 };
 

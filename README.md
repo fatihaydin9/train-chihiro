@@ -30,6 +30,16 @@ Three octaves stack together — each doubles the frequency and halves the ampli
 
 Ground color blends two biome-defined tones using a separate noise sample, giving a patchy organic look.
 
+## Procedural noise
+
+Noise functions drive most of the visual variety in the project. Three distinct implementations serve different systems:
+
+- **Simplex 2D** (`utils/noise.ts`) — seeded permutation table, gradient-based. Used for terrain height (3-octave FBM) and ground color variation. Runs on the CPU once per chunk rebuild — deterministic across sessions.
+- **Value noise** (GPU shaders) — `hash(vec2) → fract(sin(dot(...)))` with bilinear interpolation. Used in cloud generation (2-octave FBM, 8 hash calls/fragment) and water surface foam/shimmer. Runs per fragment every frame but stays cheap because the hash is a single `sin+fract`.
+- **Brown noise** (Web Audio) — cumulative random walk filtered through lowpass. Drives the train rumble and rain ambience. Three filtered layers stack for depth.
+
+Biome transitions use **smoothstep-interpolated lerp** — not noise — to crossfade every numeric parameter (fog, sky color, lighting, cloud coverage, terrain amplitude) over 15 seconds. Booleans and discrete values snap at the midpoint. Weather type snaps at 95% to avoid flickering.
+
 ## Biomes
 
 Each biome defines fog, sky, lighting, ground colors, flora rules, weather, and terrain amplitude. Some highlights:
@@ -51,6 +61,10 @@ Over 120 model types: pine trees with snow caps, autumn oaks, coral branches, st
 12 weather types with particle systems: snow, rain, blizzard, storm, drizzle, frost, leaves, ash, petals, hail, smog, sandstorm. Storm mode runs 18,000 particles. Weather crossfades between biomes.
 
 Lightning uses multi-phase flash sequences — initial flash, brief dark, main flash, sustain, slow decay — with occasional re-flashes. Not a simple on/off blink.
+
+## Clouds
+
+A procedural cloud layer sits on a hemisphere dome (r=260) between the sky dome and celestial bodies. The shader uses 2-octave FBM value noise — 8 hash calls per fragment, one draw call total. Each biome defines a `cloudCoverage` value (0 = clear, 1 = overcast). Thunderstorm and amazon biomes run heavy coverage (0.85–0.9), ocean and construction stay light (0.15–0.25), caves and tunnels have none. Clouds shift color with the day/night cycle — white in daylight, orange at sunset, dark grey at night. Wind scrolls the noise field. Coverage crossfades smoothly between biomes.
 
 ## Day/night cycle
 

@@ -1,18 +1,27 @@
-import * as THREE from 'three';
+import * as THREE from "three";
+
 import {
-  CABIN_WIDTH, CABIN_HEIGHT, CABIN_DEPTH, CABIN_WALL_THICK,
-  CABIN_FLOOR_Y, TRACK_GAUGE,
-} from '../utils/constants';
+  CABIN_DEPTH,
+  CABIN_FLOOR_Y,
+  CABIN_HEIGHT,
+  CABIN_WALL_THICK,
+  CABIN_WIDTH,
+  TRACK_GAUGE,
+  TRAIN_CAR_GAP,
+} from "../utils/constants";
 
 /** Procedural brushed-metal canvas texture. */
 function createMetalTexture(
-  baseR: number, baseG: number, baseB: number,
-  width = 64, height = 64,
+  baseR: number,
+  baseG: number,
+  baseB: number,
+  width = 64,
+  height = 64,
 ): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
   ctx.fillRect(0, 0, width, height);
   for (let i = 0; i < 200; i++) {
@@ -30,7 +39,11 @@ function createMetalTexture(
 
 /** Helper: rounded-rect THREE.Path. */
 function roundedRectPath(
-  left: number, bottom: number, width: number, height: number, radius: number,
+  left: number,
+  bottom: number,
+  width: number,
+  height: number,
+  radius: number,
 ): THREE.Path {
   const r = Math.min(radius, width / 2, height / 2);
   const right = left + width;
@@ -70,46 +83,158 @@ export class CabinSetup {
     // ====================================================================
     const floorTex = createMetalTexture(200, 200, 205);
     floorTex.repeat.set(4, 8);
-    const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.4, metalness: 0.2 });
+    const floorMat = new THREE.MeshStandardMaterial({
+      map: floorTex,
+      roughness: 0.4,
+      metalness: 0.2,
+    });
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0xF2F2F0, roughness: 0.6, metalness: 0.05 }); // clean white
-    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F3, roughness: 0.5, metalness: 0.05 });
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: 0xf2f2f0,
+      roughness: 0.6,
+      metalness: 0.05,
+    }); // clean white
+    const ceilingMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f3,
+      roughness: 0.5,
+      metalness: 0.05,
+    });
 
-    const winFrameMat = new THREE.MeshStandardMaterial({ color: 0x3A3A3E, roughness: 0.3, metalness: 0.6 }); // dark metal frame
-    const trimMat = new THREE.MeshStandardMaterial({ color: 0x555560, roughness: 0.35, metalness: 0.5 }); // subtle metallic trim
+    const winFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x3a3a3e,
+      roughness: 0.3,
+      metalness: 0.6,
+    }); // dark metal frame
+    const trimMat = new THREE.MeshStandardMaterial({
+      color: 0x555560,
+      roughness: 0.35,
+      metalness: 0.5,
+    }); // subtle metallic trim
 
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x88aacc, transparent: true, opacity: 0.15, roughness: 0.05, metalness: 0.1, depthWrite: false });
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x88aacc,
+      transparent: true,
+      opacity: 0.15,
+      roughness: 0.05,
+      metalness: 0.1,
+      depthWrite: false,
+    });
 
-    const consoleMat = new THREE.MeshStandardMaterial({ color: 0x2A2A2E, roughness: 0.4, metalness: 0.5 }); // dark console
-    const darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3e, roughness: 0.5, metalness: 0.5 });
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x555558, roughness: 0.5, metalness: 0.5 });
-    const leverMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.6 });
-    const gaugeMat = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.5, metalness: 0.5 });
-    const buttonRedMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.6, metalness: 0.2, emissive: 0xcc3333, emissiveIntensity: 0.15 });
-    const buttonGreenMat = new THREE.MeshStandardMaterial({ color: 0x33cc33, roughness: 0.6, metalness: 0.2, emissive: 0x33cc33, emissiveIntensity: 0.15 });
-    const buttonYellowMat = new THREE.MeshStandardMaterial({ color: 0xcccc33, roughness: 0.6, metalness: 0.2, emissive: 0xcccc33, emissiveIntensity: 0.15 });
+    const consoleMat = new THREE.MeshStandardMaterial({
+      color: 0x2a2a2e,
+      roughness: 0.4,
+      metalness: 0.5,
+    }); // dark console
+    const darkMetalMat = new THREE.MeshStandardMaterial({
+      color: 0x3a3a3e,
+      roughness: 0.5,
+      metalness: 0.5,
+    });
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x555558,
+      roughness: 0.5,
+      metalness: 0.5,
+    });
+    const leverMat = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.4,
+      metalness: 0.6,
+    });
+    const gaugeMat = new THREE.MeshStandardMaterial({
+      color: 0x222225,
+      roughness: 0.5,
+      metalness: 0.5,
+    });
+    const buttonRedMat = new THREE.MeshStandardMaterial({
+      color: 0xcc3333,
+      roughness: 0.6,
+      metalness: 0.2,
+      emissive: 0xcc3333,
+      emissiveIntensity: 0.15,
+    });
+    const buttonGreenMat = new THREE.MeshStandardMaterial({
+      color: 0x33cc33,
+      roughness: 0.6,
+      metalness: 0.2,
+      emissive: 0x33cc33,
+      emissiveIntensity: 0.15,
+    });
+    const buttonYellowMat = new THREE.MeshStandardMaterial({
+      color: 0xcccc33,
+      roughness: 0.6,
+      metalness: 0.2,
+      emissive: 0xcccc33,
+      emissiveIntensity: 0.15,
+    });
     const screenMat = new THREE.MeshBasicMaterial({ color: 0x1a1410 });
 
-    const chairMat = new THREE.MeshStandardMaterial({ color: 0x333338, roughness: 0.6, metalness: 0.2 }); // dark charcoal
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.15, metalness: 0.8 }); // chrome accents
+    const chairMat = new THREE.MeshStandardMaterial({
+      color: 0x333338,
+      roughness: 0.6,
+      metalness: 0.2,
+    }); // dark charcoal
+    const chromeMat = new THREE.MeshStandardMaterial({
+      color: 0xcccccc,
+      roughness: 0.15,
+      metalness: 0.8,
+    }); // chrome accents
 
     // Living area materials
-    const bedFrameMat = new THREE.MeshStandardMaterial({ color: 0xE8E8E5, roughness: 0.5, metalness: 0.15 }); // white frame
-    const mattressMat = new THREE.MeshStandardMaterial({ color: 0x3A3A50, roughness: 0.9, metalness: 0.0 }); // dark navy
-    const pillowMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.95, metalness: 0.0 });
-    const blanketMat = new THREE.MeshStandardMaterial({ color: 0x505065, roughness: 0.85, metalness: 0.0 }); // muted blue-grey
+    const bedFrameMat = new THREE.MeshStandardMaterial({
+      color: 0xe8e8e5,
+      roughness: 0.5,
+      metalness: 0.15,
+    }); // white frame
+    const mattressMat = new THREE.MeshStandardMaterial({
+      color: 0x3a3a50,
+      roughness: 0.9,
+      metalness: 0.0,
+    }); // dark navy
+    const pillowMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f5,
+      roughness: 0.95,
+      metalness: 0.0,
+    });
+    const blanketMat = new THREE.MeshStandardMaterial({
+      color: 0x505065,
+      roughness: 0.85,
+      metalness: 0.0,
+    }); // muted blue-grey
 
-    const cabinetMat = new THREE.MeshStandardMaterial({ color: 0xF0F0ED, roughness: 0.5, metalness: 0.1 }); // white cabinet
-    const counterMat = new THREE.MeshStandardMaterial({ color: 0x606065, roughness: 0.25, metalness: 0.3 }); // dark stone
-    const stoveTopMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.2, metalness: 0.7 });
-    const burnerMat = new THREE.MeshBasicMaterial({ color: 0xFF5500 });
+    const cabinetMat = new THREE.MeshStandardMaterial({
+      color: 0xf0f0ed,
+      roughness: 0.5,
+      metalness: 0.1,
+    }); // white cabinet
+    const counterMat = new THREE.MeshStandardMaterial({
+      color: 0x606065,
+      roughness: 0.25,
+      metalness: 0.3,
+    }); // dark stone
+    const stoveTopMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      roughness: 0.2,
+      metalness: 0.7,
+    });
+    const burnerMat = new THREE.MeshBasicMaterial({ color: 0xff5500 });
 
-    const rugMat = new THREE.MeshStandardMaterial({ color: 0x6A6A70, roughness: 0.9, metalness: 0.0 });
-    const nightstandMat = new THREE.MeshStandardMaterial({ color: 0xE5E5E2, roughness: 0.5, metalness: 0.1 });
+    const rugMat = new THREE.MeshStandardMaterial({
+      color: 0x6a6a70,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    const nightstandMat = new THREE.MeshStandardMaterial({
+      color: 0xe5e5e2,
+      roughness: 0.5,
+      metalness: 0.1,
+    });
 
-    const lanternBodyMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.2, metalness: 0.6 });
-    const lanternGlowMat = new THREE.MeshBasicMaterial({ color: 0xFFCC66 });
-
+    const lanternBodyMat = new THREE.MeshStandardMaterial({
+      color: 0xcccccc,
+      roughness: 0.2,
+      metalness: 0.6,
+    });
+    const lanternGlowMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
 
     // ====================================================================
     // 1. FLOOR — modern light metallic
@@ -123,7 +248,11 @@ export class CabinSetup {
     this.group.add(floor);
 
     // Subtle floor grid lines
-    const gridMat = new THREE.MeshStandardMaterial({ color: 0xBBBBC0, roughness: 0.5, metalness: 0.1 });
+    const gridMat = new THREE.MeshStandardMaterial({
+      color: 0xbbbbc0,
+      roughness: 0.5,
+      metalness: 0.1,
+    });
     for (let i = 0; i < 12; i++) {
       const z = -halfD + 0.25 + i * (CABIN_DEPTH / 12);
       const line = new THREE.Mesh(
@@ -140,7 +269,11 @@ export class CabinSetup {
         new THREE.BoxGeometry(0.03, 0.06, CABIN_DEPTH - 0.1),
         trimMat,
       );
-      trim.position.set(side * (halfW - wt / 2 - 0.015), floorY + wt / 2 + 0.03, 0);
+      trim.position.set(
+        side * (halfW - wt / 2 - 0.015),
+        floorY + wt / 2 + 0.03,
+        0,
+      );
       this.group.add(trim);
     }
 
@@ -168,43 +301,228 @@ export class CabinSetup {
     // ====================================================================
     // 3. SIDE WALLS — single large rounded-rect panoramic window each
     // ====================================================================
-    this.buildSideWall(-halfW, 1, wallMat, winFrameMat, glassMat, floorY, halfD, wt);
-    this.buildSideWall(halfW, -1, wallMat, winFrameMat, glassMat, floorY, halfD, wt);
-
-    // ====================================================================
-    // 4. BACK WALL (+Z) — clean white + small rounded window
-    // ====================================================================
-    const backWall = new THREE.Mesh(
-      new THREE.BoxGeometry(CABIN_WIDTH, CABIN_HEIGHT, wt),
+    this.buildSideWall(
+      -halfW,
+      1,
       wallMat,
-    );
-    backWall.position.set(0, floorY + CABIN_HEIGHT / 2, halfD);
-    this.group.add(backWall);
-
-    // Small rounded square window
-    const sqWinSize = 0.35;
-    const sqWinGlass = new THREE.Mesh(
-      new THREE.BoxGeometry(sqWinSize, sqWinSize, wt + 0.02),
+      winFrameMat,
       glassMat,
+      floorY,
+      halfD,
+      wt,
     );
-    sqWinGlass.position.set(0, floorY + CABIN_HEIGHT * 0.6, halfD);
-    this.group.add(sqWinGlass);
+    this.buildSideWall(
+      halfW,
+      -1,
+      wallMat,
+      winFrameMat,
+      glassMat,
+      floorY,
+      halfD,
+      wt,
+    );
 
-    // Window frame pieces
-    const sqFrameThick = 0.04;
-    for (const [sx, sy, sw, sh] of [
-      [0, sqWinSize / 2 + sqFrameThick / 2, sqWinSize + sqFrameThick * 2, sqFrameThick],
-      [0, -(sqWinSize / 2 + sqFrameThick / 2), sqWinSize + sqFrameThick * 2, sqFrameThick],
-      [-(sqWinSize / 2 + sqFrameThick / 2), 0, sqFrameThick, sqWinSize],
-      [sqWinSize / 2 + sqFrameThick / 2, 0, sqFrameThick, sqWinSize],
-    ] as [number, number, number, number][]) {
-      const piece = new THREE.Mesh(
-        new THREE.BoxGeometry(sw, sh, 0.03),
-        winFrameMat,
+    // ====================================================================
+    // 4. BACK WALL (+Z) — modern sliding door to Spirited Away car
+    // ====================================================================
+    const doorW = 0.9;
+    const doorH = 2.1;
+
+    const backWallShape = new THREE.Shape();
+    backWallShape.moveTo(-halfW, 0);
+    backWallShape.lineTo(halfW, 0);
+    backWallShape.lineTo(halfW, CABIN_HEIGHT);
+    backWallShape.lineTo(-halfW, CABIN_HEIGHT);
+    backWallShape.closePath();
+
+    // Rectangular door hole
+    const doorHole = new THREE.Path();
+    doorHole.moveTo(-doorW / 2, 0);
+    doorHole.lineTo(-doorW / 2, doorH);
+    doorHole.lineTo(doorW / 2, doorH);
+    doorHole.lineTo(doorW / 2, 0);
+    doorHole.closePath();
+    backWallShape.holes.push(doorHole);
+
+    const backWallGeo = new THREE.ExtrudeGeometry(backWallShape, {
+      depth: wt,
+      bevelEnabled: false,
+    });
+    const backWallMesh = new THREE.Mesh(backWallGeo, wallMat);
+    backWallMesh.position.set(0, floorY, halfD - wt / 2);
+    this.group.add(backWallMesh);
+
+    // Modern black door frame — sits on outer face of wall to avoid z-fighting
+    const doorFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1e,
+      roughness: 0.25,
+      metalness: 0.6,
+    });
+    const frameThick = 0.045;
+    const frameDepth = 0.06;
+    const doorZ = halfD + wt / 2 + 0.005; // just outside wall outer face
+    // Left jamb
+    const leftJamb = new THREE.Mesh(
+      new THREE.BoxGeometry(frameThick, doorH, frameDepth),
+      doorFrameMat,
+    );
+    leftJamb.position.set(
+      -doorW / 2 - frameThick / 2,
+      floorY + doorH / 2,
+      doorZ,
+    );
+    this.group.add(leftJamb);
+    // Right jamb
+    const rightJamb = new THREE.Mesh(
+      new THREE.BoxGeometry(frameThick, doorH, frameDepth),
+      doorFrameMat,
+    );
+    rightJamb.position.set(
+      doorW / 2 + frameThick / 2,
+      floorY + doorH / 2,
+      doorZ,
+    );
+    this.group.add(rightJamb);
+    // Top header
+    const topHeader = new THREE.Mesh(
+      new THREE.BoxGeometry(doorW + frameThick * 2, frameThick, frameDepth),
+      doorFrameMat,
+    );
+    topHeader.position.set(0, floorY + doorH + frameThick / 2, doorZ);
+    this.group.add(topHeader);
+
+    // Door panels — two sliding panels (closed, meeting in center)
+    const doorPanelMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1e,
+      roughness: 0.3,
+      metalness: 0.5,
+    });
+    const panelW = doorW / 2 - 0.01; // small gap in center
+    const panelThick = 0.04;
+    // Left panel
+    const leftPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(panelW, doorH - 0.02, panelThick),
+      doorPanelMat,
+    );
+    leftPanel.position.set(-panelW / 2 - 0.005, floorY + doorH / 2, doorZ);
+    this.group.add(leftPanel);
+    // Right panel
+    const rightPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(panelW, doorH - 0.02, panelThick),
+      doorPanelMat,
+    );
+    rightPanel.position.set(panelW / 2 + 0.005, floorY + doorH / 2, doorZ);
+    this.group.add(rightPanel);
+
+    // Narrow window strip on each panel
+    const doorGlassMat = new THREE.MeshStandardMaterial({
+      color: 0x334455,
+      transparent: true,
+      opacity: 0.25,
+      roughness: 0.05,
+      metalness: 0.2,
+      depthWrite: false,
+    });
+    const glassW = panelW * 0.35;
+    const glassH = doorH * 0.3;
+    for (const side of [-1, 1]) {
+      const glassPane = new THREE.Mesh(
+        new THREE.BoxGeometry(glassW, glassH, 0.005),
+        doorGlassMat,
       );
-      piece.position.set(sx, floorY + CABIN_HEIGHT * 0.6 + sy, halfD - wt / 2 - 0.01);
-      this.group.add(piece);
+      glassPane.position.set(
+        side * (panelW / 2 + 0.005),
+        floorY + doorH * 0.6,
+        doorZ + panelThick / 2 + 0.001,
+      );
+      this.group.add(glassPane);
+      // Glass border (thin black frame)
+      const glassBorderMat = new THREE.MeshStandardMaterial({
+        color: 0x111115,
+        roughness: 0.3,
+        metalness: 0.5,
+      });
+      const borderThick = 0.015;
+      // Top
+      const gbt = new THREE.Mesh(
+        new THREE.BoxGeometry(glassW + borderThick * 2, borderThick, 0.008),
+        glassBorderMat,
+      );
+      gbt.position.set(
+        side * (panelW / 2 + 0.005),
+        floorY + doorH * 0.6 + glassH / 2 + borderThick / 2,
+        doorZ + panelThick / 2 + 0.001,
+      );
+      this.group.add(gbt);
+      // Bottom
+      const gbb = new THREE.Mesh(
+        new THREE.BoxGeometry(glassW + borderThick * 2, borderThick, 0.008),
+        glassBorderMat,
+      );
+      gbb.position.set(
+        side * (panelW / 2 + 0.005),
+        floorY + doorH * 0.6 - glassH / 2 - borderThick / 2,
+        doorZ + panelThick / 2 + 0.001,
+      );
+      this.group.add(gbb);
     }
+
+    // Center meeting line (thin metallic strip)
+    const centerStrip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.01, doorH - 0.02, panelThick + 0.01),
+      new THREE.MeshStandardMaterial({
+        color: 0x2a2a2e,
+        roughness: 0.2,
+        metalness: 0.7,
+      }),
+    );
+    centerStrip.position.set(0, floorY + doorH / 2, doorZ);
+    this.group.add(centerStrip);
+
+    // Horizontal handle bars on each panel
+    const handleBarMat = new THREE.MeshStandardMaterial({
+      color: 0x888890,
+      roughness: 0.2,
+      metalness: 0.7,
+    });
+    for (const side of [-1, 1]) {
+      const handleBar = new THREE.Mesh(
+        new THREE.BoxGeometry(panelW * 0.4, 0.02, 0.025),
+        handleBarMat,
+      );
+      handleBar.position.set(
+        side * (panelW / 2 + 0.005),
+        floorY + doorH * 0.45,
+        doorZ - panelThick / 2 - 0.015,
+      );
+      this.group.add(handleBar);
+    }
+
+    // Sliding rail above door
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0x2a2a2e,
+      roughness: 0.3,
+      metalness: 0.6,
+    });
+    const slidingRail = new THREE.Mesh(
+      new THREE.BoxGeometry(doorW + 0.2, 0.025, 0.04),
+      railMat,
+    );
+    slidingRail.position.set(0, floorY + doorH + frameThick + 0.02, doorZ);
+    this.group.add(slidingRail);
+
+    // Bridge floor plate (0.4m gap between cabin and SA car)
+    const bridgeMat = new THREE.MeshStandardMaterial({
+      color: 0x555558,
+      roughness: 0.5,
+      metalness: 0.5,
+    });
+    const bridge = new THREE.Mesh(
+      new THREE.BoxGeometry(doorW + 0.1, wt, TRAIN_CAR_GAP),
+      bridgeMat,
+    );
+    bridge.position.set(0, floorY, halfD + TRAIN_CAR_GAP / 2);
+    this.group.add(bridge);
 
     // ====================================================================
     // 5. FRONT WALL (-Z) — panoramic windshield (same geometry)
@@ -231,9 +549,14 @@ export class CabinSetup {
     const winB = sillHeight;
     const winT = sillHeight + winHeight;
     const rc = cornerR;
-    wallShape.holes.push(roundedRectPath(winL, winB, winR - winL, winT - winB, rc));
+    wallShape.holes.push(
+      roundedRectPath(winL, winB, winR - winL, winT - winB, rc),
+    );
 
-    const frontWallGeo = new THREE.ExtrudeGeometry(wallShape, { depth: wt, bevelEnabled: false });
+    const frontWallGeo = new THREE.ExtrudeGeometry(wallShape, {
+      depth: wt,
+      bevelEnabled: false,
+    });
     const frontWallMesh = new THREE.Mesh(frontWallGeo, darkMetalMat);
     frontWallMesh.position.set(0, floorY, frontZ - wt / 2);
     this.group.add(frontWallMesh);
@@ -247,16 +570,29 @@ export class CabinSetup {
       if (curve instanceof THREE.LineCurve) {
         bezelShape.lineTo(curve.v2.x, curve.v2.y);
       } else if (curve instanceof THREE.QuadraticBezierCurve) {
-        bezelShape.quadraticCurveTo(curve.v1.x, curve.v1.y, curve.v2.x, curve.v2.y);
+        bezelShape.quadraticCurveTo(
+          curve.v1.x,
+          curve.v1.y,
+          curve.v2.x,
+          curve.v2.y,
+        );
       }
     }
     const brc = Math.max(rc - bezelThick, 0.05);
-    bezelShape.holes.push(roundedRectPath(
-      winL + bezelThick, winB + bezelThick,
-      (winR - winL) - bezelThick * 2, (winT - winB) - bezelThick * 2, brc,
-    ));
+    bezelShape.holes.push(
+      roundedRectPath(
+        winL + bezelThick,
+        winB + bezelThick,
+        winR - winL - bezelThick * 2,
+        winT - winB - bezelThick * 2,
+        brc,
+      ),
+    );
 
-    const bezelGeo = new THREE.ExtrudeGeometry(bezelShape, { depth: 0.03, bevelEnabled: false });
+    const bezelGeo = new THREE.ExtrudeGeometry(bezelShape, {
+      depth: 0.03,
+      bevelEnabled: false,
+    });
     const bezelMesh = new THREE.Mesh(bezelGeo, winFrameMat);
     bezelMesh.position.set(0, floorY, frontZ + wt / 2 - 0.005);
     this.group.add(bezelMesh);
@@ -333,14 +669,22 @@ export class CabinSetup {
       this.group.add(gauge);
       const face = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.005, 16),
-        new THREE.MeshStandardMaterial({ color: 0xddddcc, roughness: 0.4, metalness: 0.1 }),
+        new THREE.MeshStandardMaterial({
+          color: 0xddddcc,
+          roughness: 0.4,
+          metalness: 0.1,
+        }),
       );
       face.rotation.x = Math.PI / 2;
-      face.position.set(gx, deskY + deskHeight / 2 + 0.01, deskZ - 0.10);
+      face.position.set(gx, deskY + deskHeight / 2 + 0.01, deskZ - 0.1);
       this.group.add(face);
       const needle = new THREE.Mesh(
         new THREE.BoxGeometry(0.005, 0.04, 0.002),
-        new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.3 }),
+        new THREE.MeshStandardMaterial({
+          color: 0xcc0000,
+          roughness: 0.5,
+          metalness: 0.3,
+        }),
       );
       needle.position.set(gx, deskY + deskHeight / 2 + 0.01, deskZ - 0.095);
       needle.rotation.z = i * 0.5 - 0.3;
@@ -369,7 +713,11 @@ export class CabinSetup {
       new THREE.BoxGeometry(0.34, 0.24, 0.03),
       darkMetalMat,
     );
-    monitorFrame.position.set(0.05, deskY + deskHeight / 2 + 0.12, deskZ - 0.21);
+    monitorFrame.position.set(
+      0.05,
+      deskY + deskHeight / 2 + 0.12,
+      deskZ - 0.21,
+    );
     monitorFrame.rotation.x = 0.3;
     this.group.add(monitorFrame);
 
@@ -436,21 +784,33 @@ export class CabinSetup {
       new THREE.BoxGeometry(bedW - 0.06, mattressH, bedLen - 0.06),
       mattressMat,
     );
-    mattress.position.set(bedX, bedBaseY + bedBaseH / 2 + mattressH / 2, bedMidZ);
+    mattress.position.set(
+      bedX,
+      bedBaseY + bedBaseH / 2 + mattressH / 2,
+      bedMidZ,
+    );
     this.group.add(mattress);
 
     const pillow = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.08, 0.3),
       pillowMat,
     );
-    pillow.position.set(bedX, bedBaseY + bedBaseH / 2 + mattressH + 0.04, bedZ1 + 0.25);
+    pillow.position.set(
+      bedX,
+      bedBaseY + bedBaseH / 2 + mattressH + 0.04,
+      bedZ1 + 0.25,
+    );
     this.group.add(pillow);
 
     const blanket = new THREE.Mesh(
       new THREE.BoxGeometry(bedW - 0.04, 0.04, bedLen * 0.55),
       blanketMat,
     );
-    blanket.position.set(bedX, bedBaseY + bedBaseH / 2 + mattressH + 0.02, bedMidZ + bedLen * 0.15);
+    blanket.position.set(
+      bedX,
+      bedBaseY + bedBaseH / 2 + mattressH + 0.02,
+      bedMidZ + bedLen * 0.15,
+    );
     this.group.add(blanket);
 
     const headboard = new THREE.Mesh(
@@ -491,7 +851,11 @@ export class CabinSetup {
       new THREE.BoxGeometry(kitDepth + 0.04, counterH, kitLen + 0.04),
       counterMat,
     );
-    counter.position.set(kitchenX, cabinetY + cabinetH / 2 + counterH / 2, kitMidZ);
+    counter.position.set(
+      kitchenX,
+      cabinetY + cabinetH / 2 + counterH / 2,
+      kitMidZ,
+    );
     this.group.add(counter);
 
     const stoveW = 0.4;
@@ -560,7 +924,13 @@ export class CabinSetup {
     this.group.add(lanternBase);
     const lanternBody = new THREE.Mesh(
       new THREE.CylinderGeometry(0.035, 0.035, 0.1, 8),
-      new THREE.MeshStandardMaterial({ color: 0xFFEEBB, transparent: true, opacity: 0.4, roughness: 0.1, metalness: 0.0 }),
+      new THREE.MeshStandardMaterial({
+        color: 0xffeebb,
+        transparent: true,
+        opacity: 0.4,
+        roughness: 0.1,
+        metalness: 0.0,
+      }),
     );
     lanternBody.position.set(nsX, lanternBaseY + 0.08, nsZ);
     this.group.add(lanternBody);
@@ -582,14 +952,15 @@ export class CabinSetup {
     // ====================================================================
     // 10. RUG (living area center)
     // ====================================================================
-    const rug = new THREE.Mesh(
-      new THREE.BoxGeometry(1.0, 0.01, 1.5),
-      rugMat,
-    );
+    const rug = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.01, 1.5), rugMat);
     rug.position.set(0.1, floorY + wt / 2 + 0.005, 1.4);
     this.group.add(rug);
 
-    const rugBorderMat = new THREE.MeshStandardMaterial({ color: 0x4A4A50, roughness: 0.9, metalness: 0.05 });
+    const rugBorderMat = new THREE.MeshStandardMaterial({
+      color: 0x4a4a50,
+      roughness: 0.9,
+      metalness: 0.05,
+    });
     const rugBorder = new THREE.Mesh(
       new THREE.BoxGeometry(1.1, 0.008, 1.6),
       rugBorderMat,
@@ -600,8 +971,12 @@ export class CabinSetup {
     // ====================================================================
     // 14. TRAIN HEADLIGHTS (front of cabin, -Z)
     // ====================================================================
-    const headlightMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.6 });
-    const headlightLensMat = new THREE.MeshBasicMaterial({ color: 0xFFEECC });
+    const headlightMat = new THREE.MeshStandardMaterial({
+      color: 0x333333,
+      roughness: 0.3,
+      metalness: 0.6,
+    });
+    const headlightLensMat = new THREE.MeshBasicMaterial({ color: 0xffeecc });
     for (const side of [-1, 1]) {
       // Housing
       const housing = new THREE.Mesh(
@@ -637,7 +1012,12 @@ export class CabinSetup {
 
     const wheelRadius = 0.2;
     const wheelWidth = 0.08;
-    const wheelGeo = new THREE.CylinderGeometry(wheelRadius, wheelRadius, wheelWidth, 12);
+    const wheelGeo = new THREE.CylinderGeometry(
+      wheelRadius,
+      wheelRadius,
+      wheelWidth,
+      12,
+    );
     wheelGeo.rotateZ(Math.PI / 2);
 
     for (const zOff of [-halfD + 0.6, halfD - 0.6]) {
@@ -650,7 +1030,11 @@ export class CabinSetup {
 
       for (const side of [-1, 1]) {
         const wheel = new THREE.Mesh(wheelGeo, frameMat);
-        wheel.position.set(side * (TRACK_GAUGE / 2), CABIN_FLOOR_Y - 0.35, zOff);
+        wheel.position.set(
+          side * (TRACK_GAUGE / 2),
+          CABIN_FLOOR_Y - 0.35,
+          zOff,
+        );
         this.group.add(wheel);
       }
 
@@ -681,16 +1065,16 @@ export class CabinSetup {
     const wallDepth = CABIN_DEPTH;
 
     // Single panoramic window specs
-    const winPadSide = 0.25;      // wall pillar width at front/back
-    const winPadBottom = 0.7;     // sill height from floor
-    const winPadTop = 0.4;        // header height from ceiling
-    const winCornerR = 0.25;      // rounded corner radius
+    const winPadSide = 0.25; // wall pillar width at front/back
+    const winPadBottom = 0.7; // sill height from floor
+    const winPadTop = 0.4; // header height from ceiling
+    const winCornerR = 0.25; // rounded corner radius
 
     const winZ1 = -wallDepth / 2 + winPadSide;
     const winZ2 = wallDepth / 2 - winPadSide;
     const winW = winZ2 - winZ1;
-    const winB = winPadBottom;                          // relative to floorY
-    const winT = wallHeight - winPadTop;                // relative to floorY
+    const winB = winPadBottom; // relative to floorY
+    const winT = wallHeight - winPadTop; // relative to floorY
     const winH = winT - winB;
 
     // Wall as Shape+Extrude with rounded-rect hole (Y=vertical, Z=horizontal on wall)
@@ -704,9 +1088,14 @@ export class CabinSetup {
     // Window hole (in wall-local coords: X→Z, Y→Y)
     const holeLeft = winPadSide;
     const holeBottom = winPadBottom;
-    wallShape.holes.push(roundedRectPath(holeLeft, holeBottom, winW, winH, winCornerR));
+    wallShape.holes.push(
+      roundedRectPath(holeLeft, holeBottom, winW, winH, winCornerR),
+    );
 
-    const wallGeo = new THREE.ExtrudeGeometry(wallShape, { depth: wt, bevelEnabled: false });
+    const wallGeo = new THREE.ExtrudeGeometry(wallShape, {
+      depth: wt,
+      bevelEnabled: false,
+    });
 
     // Rotate so the extrude depth goes along X axis
     const wallMesh = new THREE.Mesh(wallGeo, wallMat);
@@ -737,23 +1126,42 @@ export class CabinSetup {
     // Inner bezel frame (rounded rect border on inside face)
     const bezelThick = 0.04;
     const bezelShape = new THREE.Shape();
-    const outerPath = roundedRectPath(holeLeft, holeBottom, winW, winH, winCornerR);
+    const outerPath = roundedRectPath(
+      holeLeft,
+      holeBottom,
+      winW,
+      winH,
+      winCornerR,
+    );
     // Trace outer path onto shape
     bezelShape.moveTo(holeLeft + winCornerR, holeBottom);
     for (const curve of outerPath.curves) {
       if (curve instanceof THREE.LineCurve) {
         bezelShape.lineTo(curve.v2.x, curve.v2.y);
       } else if (curve instanceof THREE.QuadraticBezierCurve) {
-        bezelShape.quadraticCurveTo(curve.v1.x, curve.v1.y, curve.v2.x, curve.v2.y);
+        bezelShape.quadraticCurveTo(
+          curve.v1.x,
+          curve.v1.y,
+          curve.v2.x,
+          curve.v2.y,
+        );
       }
     }
     const innerR = Math.max(winCornerR - bezelThick, 0.05);
-    bezelShape.holes.push(roundedRectPath(
-      holeLeft + bezelThick, holeBottom + bezelThick,
-      winW - bezelThick * 2, winH - bezelThick * 2, innerR,
-    ));
+    bezelShape.holes.push(
+      roundedRectPath(
+        holeLeft + bezelThick,
+        holeBottom + bezelThick,
+        winW - bezelThick * 2,
+        winH - bezelThick * 2,
+        innerR,
+      ),
+    );
 
-    const bezelGeo = new THREE.ExtrudeGeometry(bezelShape, { depth: 0.025, bevelEnabled: false });
+    const bezelGeo = new THREE.ExtrudeGeometry(bezelShape, {
+      depth: 0.025,
+      bevelEnabled: false,
+    });
     const bezelMesh = new THREE.Mesh(bezelGeo, winFrameMat);
     bezelMesh.rotation.y = -Math.PI / 2;
     if (normalDir > 0) {

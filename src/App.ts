@@ -1,35 +1,40 @@
-import * as THREE from 'three';
-import { Engine } from './core/Engine';
-import { GameLoop } from './core/GameLoop';
-import { EventBus } from './core/EventBus';
-import { ResourceManager } from './core/ResourceManager';
-import { VoxelRegistry } from './voxel/VoxelRegistry';
-import { TreadmillSystem } from './treadmill/TreadmillSystem';
-import { BiomeController } from './biome/BiomeController';
-import { FogSystem } from './environment/FogSystem';
-import { LightingSystem } from './environment/LightingSystem';
-import { SkySystem } from './environment/SkySystem';
-import { DayNightCycle } from './environment/DayNightCycle';
-import { WeatherSystem } from './weather/WeatherSystem';
-import { CabinSetup } from './cabin/CabinSetup';
-import { TrainBodyAhead } from './cabin/TrainBodyAhead';
-import { TrainMotion } from './cabin/TrainMotion';
-import { StoveLight } from './cabin/StoveLight';
-import { WindowEffects } from './cabin/WindowEffects';
-import { InteractableObject } from './cabin/InteractableObject';
-import { VRInputManager } from './interaction/VRInputManager';
-import { GrabSystem } from './interaction/GrabSystem';
-import { ControllerModel } from './interaction/ControllerModel';
-import { AudioSystem } from './audio/AudioSystem';
-import { AudioCrossfader } from './audio/AudioCrossfader';
-import { ProceduralSounds } from './audio/ProceduralSounds';
-import { DistantScenery } from './treadmill/DistantScenery';
-import { BirdFlock } from './environment/BirdFlock';
-import { WaterSurface } from './environment/WaterSurface';
-import { WaterWake } from './environment/WaterWake';
-import { DesktopCameraController } from './interaction/DesktopCameraController';
-import { CabinInteraction } from './cabin/CabinInteraction';
-import { CABIN_FLOOR_Y, CABIN_WIDTH, CABIN_DEPTH } from './utils/constants';
+import * as THREE from "three";
+
+import { CABIN_DEPTH, CABIN_FLOOR_Y, CABIN_WIDTH } from "./utils/constants";
+
+import { AudioCrossfader } from "./audio/AudioCrossfader";
+import { AudioSystem } from "./audio/AudioSystem";
+import { BiomeController } from "./biome/BiomeController";
+import { BirdFlock } from "./environment/BirdFlock";
+import { CabinInteraction } from "./cabin/CabinInteraction";
+import { CabinSetup } from "./cabin/CabinSetup";
+import { ControllerModel } from "./interaction/ControllerModel";
+import { DayNightCycle } from "./environment/DayNightCycle";
+import { DesktopCameraController } from "./interaction/DesktopCameraController";
+import { DistantScenery } from "./treadmill/DistantScenery";
+import { Engine } from "./core/Engine";
+import { EventBus } from "./core/EventBus";
+import { FogSystem } from "./environment/FogSystem";
+import { GameLoop } from "./core/GameLoop";
+import { GrabSystem } from "./interaction/GrabSystem";
+import { InteractableObject } from "./cabin/InteractableObject";
+import { LightingSystem } from "./environment/LightingSystem";
+import { ProceduralSounds } from "./audio/ProceduralSounds";
+import { ResourceManager } from "./core/ResourceManager";
+import { CloudSystem } from "./environment/CloudSystem";
+import { SkySystem } from "./environment/SkySystem";
+import { SpiritedAwayCar } from "./cabin/SpiritedAwayCar";
+import { StoveLight } from "./cabin/StoveLight";
+import { TrainBodyAhead } from "./cabin/TrainBodyAhead";
+import { TrainMotion } from "./cabin/TrainMotion";
+import { TreadmillSystem } from "./treadmill/TreadmillSystem";
+import { VRInputManager } from "./interaction/VRInputManager";
+import { VoxelRegistry } from "./voxel/VoxelRegistry";
+import { Fireflies } from "./environment/Fireflies";
+import { WaterSurface } from "./environment/WaterSurface";
+import { WaterWake } from "./environment/WaterWake";
+import { WeatherSystem } from "./weather/WeatherSystem";
+import { WindowEffects } from "./cabin/WindowEffects";
 
 export class App {
   private engine: Engine;
@@ -42,6 +47,38 @@ export class App {
     this.eventBus = new EventBus();
     this.resources = new ResourceManager();
     this.loop = new GameLoop(this.engine);
+  }
+
+  dispose(): void {
+    // Stop animation loop
+    this.engine.renderer.setAnimationLoop(null);
+
+    // Remove renderer DOM element
+    const canvas = this.engine.renderer.domElement;
+    if (canvas.parentElement) {
+      canvas.parentElement.removeChild(canvas);
+    }
+
+    // Remove VR button if present
+    const vrBtn = document.getElementById("vr-button");
+    if (vrBtn) vrBtn.remove();
+
+    // Traverse scene and dispose all geometries + materials
+    this.engine.scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).geometry) {
+        (obj as THREE.Mesh).geometry.dispose();
+      }
+      const mat = (obj as THREE.Mesh).material;
+      if (mat) {
+        if (Array.isArray(mat)) {
+          mat.forEach((m) => m.dispose());
+        } else {
+          (mat as THREE.Material).dispose();
+        }
+      }
+    });
+
+    this.engine.dispose();
   }
 
   async init(): Promise<void> {
@@ -65,6 +102,8 @@ export class App {
     this.loop.addSystem(fogSystem);
     this.loop.addSystem(lightingSystem);
     this.loop.addSystem(skySystem);
+    const cloudSystem = new CloudSystem(scene, this.eventBus);
+    this.loop.addSystem(cloudSystem);
 
     // --- Treadmill ---
     const treadmill = new TreadmillSystem(scene, this.eventBus, registry);
@@ -87,6 +126,10 @@ export class App {
     const waterWake = new WaterWake(scene, this.eventBus);
     this.loop.addSystem(waterWake);
 
+    // --- Fireflies (ocean biome, night only) ---
+    const fireflies = new Fireflies(scene, this.eventBus);
+    this.loop.addSystem(fireflies);
+
     // --- Weather ---
     const weather = new WeatherSystem(scene, this.eventBus, camera);
     this.loop.addSystem(weather);
@@ -95,7 +138,12 @@ export class App {
     const cabin = new CabinSetup();
     scene.add(cabin.group);
 
-    // --- Train Cars Ahead (extend in -Z, visible through windshield) ---
+    // --- Spirited Away Wooden Passenger Car (behind cabin, +Z) ---
+    const saCar = new SpiritedAwayCar();
+    scene.add(saCar.group);
+    this.loop.addSystem(saCar);
+
+    // --- Train Cars Ahead (behind SA car, +Z) ---
     const trainBody = new TrainBodyAhead();
     scene.add(trainBody.group);
 
@@ -111,7 +159,11 @@ export class App {
     this.loop.addSystem(trainMotion);
 
     // --- Desktop Camera Controller (non-VR mouse+keyboard) ---
-    const desktopCam = new DesktopCameraController(camera, renderer, this.eventBus);
+    const desktopCam = new DesktopCameraController(
+      camera,
+      renderer,
+      this.eventBus,
+    );
     this.loop.addSystem(desktopCam);
 
     // --- Cabin Interactions (sit, lie, light toggle + hover tooltips) ---
@@ -126,20 +178,28 @@ export class App {
 
     // Coffee mug on control desk (desk is near -Z front wall)
     const coffeeMug = new InteractableObject(
-      'coffee_mug',
+      "coffee_mug",
       new THREE.CylinderGeometry(0.04, 0.035, 0.1, 8),
-      new THREE.MeshStandardMaterial({ color: 0x885533, roughness: 0.8, metalness: 0.0 }),
+      new THREE.MeshStandardMaterial({
+        color: 0x885533,
+        roughness: 0.8,
+        metalness: 0.0,
+      }),
       new THREE.Vector3(-0.6, deskY + 0.08, -halfD + 0.35),
     );
     scene.add(coffeeMug.mesh);
 
     // Logbook on nightstand (living area, beside bed)
     const nsX = halfW - 0.12 - 0.39 - 0.78 / 2 - 0.2; // nightstand X
-    const nsTopY = CABIN_FLOOR_Y + 0.06 + 0.4 + 0.02;  // nightstand top surface
+    const nsTopY = CABIN_FLOOR_Y + 0.06 + 0.4 + 0.02; // nightstand top surface
     const logbook = new InteractableObject(
-      'logbook',
+      "logbook",
       new THREE.BoxGeometry(0.15, 0.03, 0.2),
-      new THREE.MeshStandardMaterial({ color: 0x554422, roughness: 0.9, metalness: 0.0 }),
+      new THREE.MeshStandardMaterial({
+        color: 0x554422,
+        roughness: 0.9,
+        metalness: 0.0,
+      }),
       new THREE.Vector3(nsX, nsTopY, 0.3 + 0.15),
     );
     scene.add(logbook.mesh);
@@ -157,7 +217,11 @@ export class App {
 
     // --- Audio ---
     const audioSystem = new AudioSystem(camera);
-    const crossfader = new AudioCrossfader(audioSystem, this.resources, this.eventBus);
+    const crossfader = new AudioCrossfader(
+      audioSystem,
+      this.resources,
+      this.eventBus,
+    );
     this.loop.addSystem(crossfader);
 
     const proceduralSounds = new ProceduralSounds(audioSystem, this.eventBus);
@@ -166,9 +230,9 @@ export class App {
     // Resume audio context on user gesture
     const resumeAudio = () => {
       audioSystem.resume();
-      document.removeEventListener('click', resumeAudio);
+      document.removeEventListener("click", resumeAudio);
     };
-    document.addEventListener('click', resumeAudio);
+    document.addEventListener("click", resumeAudio);
 
     // --- Start ---
     this.loop.start();
